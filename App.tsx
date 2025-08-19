@@ -16,6 +16,11 @@ export default function App() {
   const lastHeadlineRef = useRef<number>(0)
   const [showHeadline, setShowHeadline] = useState(false)
   const [headlineText, setHeadlineText] = useState('')
+  // Footer typing effect
+  const footerPreText = 'Designed and Built by '
+  const footerLinkText = 'Aakarsh'
+  const [footerTypedCount, setFooterTypedCount] = useState(0)
+  const [footerDim, setFooterDim] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
     if (saved === 'light' || saved === 'dark') return saved
@@ -84,6 +89,26 @@ export default function App() {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
+    }
+  }, [])
+
+  // Typewriter for footer
+  useEffect(() => {
+    const total = footerPreText.length + footerLinkText.length
+    let interval: number | undefined
+    const step = () => {
+      setFooterTypedCount((prev) => {
+        const next = Math.min(prev + 1, total)
+        if (next === total) {
+          window.clearInterval(interval)
+          window.setTimeout(() => setFooterDim(true), 1400)
+        }
+        return next
+      })
+    }
+    interval = window.setInterval(step, 40)
+    return () => {
+      if (interval) window.clearInterval(interval)
     }
   }, [])
 
@@ -194,9 +219,9 @@ export default function App() {
 
     return (
       <div 
-        className={`${bgColor} box-border content-stretch flex gap-2.5 items-center justify-center p-[24px] relative rounded-[3rem] shrink-0 transition-colors duration-500 ease-out border border-border`}
+        className={`${bgColor} box-border content-stretch flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-3 sm:p-5 md:p-6`}
       >
-        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[96px] text-nowrap">
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[40px] sm:text-[56px] md:text-[72px] lg:text-[96px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
@@ -218,7 +243,7 @@ export default function App() {
         </motion.div>
       )}
       {/* Top bar: Theme + Status */}
-      <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
         {/* Theme switcher */}
         <button
           aria-label="Toggle theme"
@@ -227,71 +252,73 @@ export default function App() {
         >
           <span className="sr-only">Toggle theme</span>
           <span className="text-[10px] mr-1">{theme === 'dark' ? '🌙' : '☀️'}</span>
-          <span className="text-[10px] capitalize opacity-70 group-hover:opacity-100">{theme}</span>
+          <span className="text-[10px] capitalize opacity-70 group-hover:opacity-100 hidden sm:inline">{theme}</span>
         </button>
 
         <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
-        <span className="text-sm text-muted-foreground capitalize font-['Space Grotesk',_sans-serif]">
+        <span className="text-xs sm:text-sm text-muted-foreground capitalize font-['Space Grotesk',_sans-serif]">
           {connectionStatus}
         </span>
       </div>
 
       <div className="flex flex-col items-center justify-center relative size-full">
-        <div className="box-border content-stretch flex flex-col gap-2.5 items-center justify-center px-[461px] py-[341px] relative size-full">
-          <div className="box-border content-stretch flex flex-col gap-3.5 items-start justify-start p-0 relative shrink-0">
-            <div className="font-bold leading-[0] relative shrink-0 text-foreground/90 text-[24px] w-full">
-              <p className="block leading-[normal]">Current Price (USD)</p>
+        <div className="w-full max-w-[560px] px-5 sm:px-6 md:px-8 py-16 sm:py-24 md:py-28">
+          <div className="flex flex-col gap-4">
+            <div className="font-bold text-foreground/90 text-[20px] sm:text-[22px] md:text-[24px]">
+              <p className="leading-none">Current Price (USD)</p>
             </div>
-            <div className="box-border content-stretch flex gap-2 items-start justify-start p-0 relative shrink-0 w-full">
-              {/* Dollar frame (no external asset) */}
-              <div 
-                className="bg-muted box-border content-stretch flex items-center justify-center gap-2 p-[10px] relative rounded-3xl shrink-0 border border-border"
-              >
-                <div className="size-8 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
-                  <span className="text-[14px] leading-none">₿</span>
-                </div>
-                <div className="font-['Space Grotesk',_sans-serif] font-normal leading-[0] relative shrink-0 text-foreground text-[24px] text-nowrap">
-                  <p className="block leading-[normal] whitespace-pre">$</p>
-                </div>
+            <div className="inline-flex items-center gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit">
+              <div className="size-8 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+                <span className="text-[14px] leading-none">₿</span>
               </div>
-
-              {/* Three animated blocks */}
-              <PriceBlock value={currentParts.first} previousValue={previousParts.first} />
-              <PriceBlock value={currentParts.middle} previousValue={previousParts.middle} />
-              <PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} />
+              <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[24px] leading-none">$</div>
+            </div>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="w-full"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
+              <div className="w-full"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+              <div className="w-full"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom-right: LinkedIn link */}
-      <motion.a
-        href="https://www.linkedin.com/in/aakarshraaj"
-        aria-label="LinkedIn profile of aakarshraaj"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-8 right-8 bg-card rounded-3xl shadow-lg px-3 py-2 border border-border flex items-center gap-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.1 }}
+      {/* Bottom-right: Typewriter footer */}
+      <motion.div 
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 text-muted-foreground"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: footerDim ? 0.6 : 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <div className="size-5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center">
-          <span className="text-[10px] leading-none">in</span>
+        <div className="text-[11px] sm:text-xs font-['Space Grotesk',_sans-serif] select-none">
+          <span>{footerPreText.slice(0, Math.min(footerTypedCount, footerPreText.length))}</span>
+          <a
+            className="underline decoration-dotted hover:decoration-solid hover:text-foreground transition-colors"
+            href="https://www.linkedin.com/in/aakarshraaj"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {footerTypedCount > footerPreText.length 
+              ? footerLinkText.slice(0, footerTypedCount - footerPreText.length) 
+              : ''}
+          </a>
+          {footerTypedCount < footerPreText.length + footerLinkText.length && (
+            <span className="ml-0.5 opacity-60">|</span>
+          )}
         </div>
-        <span>@aakarshraaj</span>
-      </motion.a>
+      </motion.div>
 
       {/* Additional Info Panel */}
       <motion.div 
-        className="absolute bottom-8 left-8 bg-card rounded-3xl shadow-lg p-4 border border-border"
+        className="fixed left-4 right-4 bottom-20 sm:bottom-8 sm:left-8 sm:right-auto bg-card rounded-2xl sm:rounded-3xl shadow-lg p-3 sm:p-4 border border-border max-w-[280px] sm:max-w-none"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
       >
-        <div className="font-bold text-sm mb-2">
+        <div className="font-bold text-xs sm:text-sm mb-1.5 sm:mb-2">
           Live Data
         </div>
-        <div className="text-xs text-muted-foreground space-y-1">
+        <div className="text-[10px] sm:text-xs text-muted-foreground space-y-1">
           <div>Volume: {volume.toFixed(6)} BTC</div>
           <div>Change: {((currentPrice - previousPrice) / previousPrice * 100).toFixed(4)}%</div>
           <div>Source: Binance WebSocket</div>
