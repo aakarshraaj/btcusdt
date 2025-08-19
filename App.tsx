@@ -219,9 +219,9 @@ export default function App() {
 
     return (
       <div 
-        className={`${bgColor} box-border content-stretch flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-3 sm:p-5 md:p-6`}
+        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-3 sm:p-5 md:p-6`}
       >
-        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[40px] sm:text-[56px] md:text-[72px] lg:text-[96px] text-nowrap">
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[72px] sm:text-[88px] md:text-[96px] lg:text-[112px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
@@ -261,22 +261,24 @@ export default function App() {
         </span>
       </div>
 
-      <div className="flex flex-col items-center justify-center relative size-full">
-        <div className="w-full max-w-[560px] px-5 sm:px-6 md:px-8 py-16 sm:py-24 md:py-28">
-          <div className="flex flex-col gap-4">
-            <div className="font-bold text-foreground/90 text-[20px] sm:text-[22px] md:text-[24px]">
+      <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
+        <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center">
+          <div className="flex flex-col gap-4 items-start md:items-center">
+            <div className="font-bold text-foreground/90 text-[26px] sm:text-[28px] md:text-[24px]">
               <p className="leading-none">Current Price (USD)</p>
             </div>
-            <div className="inline-flex items-center gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit">
-              <div className="size-8 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
-                <span className="text-[14px] leading-none">₿</span>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3 sm:gap-4">
+              <div className="inline-flex items-center gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit md:mt-1 scale-110 sm:scale-100 origin-left">
+                <div className="size-9 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+                  <span className="text-[16px] leading-none">₿</span>
+                </div>
+                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[24px] leading-none">$</div>
               </div>
-              <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[24px] leading-none">$</div>
-            </div>
-            <div className="flex flex-col gap-3 sm:gap-4">
-              <div className="w-full"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
-              <div className="w-full"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
-              <div className="w-full"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+              <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
+                <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
+                <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+                <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+              </div>
             </div>
           </div>
         </div>
