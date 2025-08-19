@@ -196,7 +196,7 @@ export default function App() {
       <div 
         className={`${bgColor} box-border content-stretch flex gap-2.5 items-center justify-center p-[24px] relative rounded-[3rem] shrink-0 transition-colors duration-500 ease-out border border-border`}
       >
-        <div className="font-['Space_Grotesk:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[96px] text-nowrap">
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[96px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
@@ -231,7 +231,7 @@ export default function App() {
         </button>
 
         <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
-        <span className="text-sm text-muted-foreground capitalize font-['Space_Grotesk:Regular',_sans-serif]">
+        <span className="text-sm text-muted-foreground capitalize font-['Space Grotesk',_sans-serif]">
           {connectionStatus}
         </span>
       </div>
@@ -250,7 +250,7 @@ export default function App() {
                 <div className="size-8 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
                   <span className="text-[14px] leading-none">₿</span>
                 </div>
-                <div className="font-['Space_Grotesk:Regular',_sans-serif] font-normal leading-[0] relative shrink-0 text-foreground text-[24px] text-nowrap">
+                <div className="font-['Space Grotesk',_sans-serif] font-normal leading-[0] relative shrink-0 text-foreground text-[24px] text-nowrap">
                   <p className="block leading-[normal] whitespace-pre">$</p>
                 </div>
               </div>
