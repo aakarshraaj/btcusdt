@@ -263,11 +263,11 @@ export default function App() {
 
       <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
         <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center">
-          <div className="flex flex-col gap-4 items-start md:items-center">
-            <div className="font-bold text-foreground/90 text-[26px] sm:text-[28px] md:text-[24px]">
-              <p className="leading-none">Current Price (USD)</p>
+          <div className="flex flex-col gap-4 items-start md:items-start">
+            <div className="font-bold text-foreground/90 text-[26px] sm:text-[28px] md:text-[24px] text-left">
+              <p className="leading-none">BTC / USDT</p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3 sm:gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-start gap-3 sm:gap-4">
               <div className="inline-flex items-center gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit md:mt-1 scale-110 sm:scale-100 origin-left">
                 <div className="size-9 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
                   <span className="text-[16px] leading-none">₿</span>
@@ -287,7 +287,7 @@ export default function App() {
       {/* Bottom-right: LinkedIn link */}
       {/* Bottom-right: Typewriter footer */}
       <motion.div 
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 text-muted-foreground"
+        className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+12px)] sm:bottom-6 sm:right-6 z-20 text-muted-foreground"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: footerDim ? 0.6 : 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -312,7 +312,7 @@ export default function App() {
 
       {/* Additional Info Panel */}
       <motion.div 
-        className="fixed left-4 right-4 bottom-20 sm:bottom-8 sm:left-8 sm:right-auto bg-card rounded-2xl sm:rounded-3xl shadow-lg p-3 sm:p-4 border border-border max-w-[280px] sm:max-w-none"
+        className="relative mx-4 mt-6 mb-[calc(env(safe-area-inset-bottom)+72px)] sm:mx-0 sm:mt-0 sm:mb-0 sm:fixed sm:left-8 sm:right-auto sm:bottom-8 bg-card rounded-2xl sm:rounded-3xl shadow-lg p-3 sm:p-4 border border-border max-w-none sm:max-w-[320px]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
