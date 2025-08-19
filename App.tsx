@@ -19,8 +19,7 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
     if (saved === 'light' || saved === 'dark') return saved
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    return prefersDark ? 'dark' : 'light'
+    return 'light'
   })
 
   // WebSocket connection logic
@@ -264,6 +263,23 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Bottom-right: LinkedIn link */}
+      <motion.a
+        href="https://www.linkedin.com/in/aakarshraaj"
+        aria-label="LinkedIn profile of aakarshraaj"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-8 right-8 bg-card rounded-3xl shadow-lg px-3 py-2 border border-border flex items-center gap-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.1 }}
+      >
+        <div className="size-5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center">
+          <span className="text-[10px] leading-none">in</span>
+        </div>
+        <span>@aakarshraaj</span>
+      </motion.a>
 
       {/* Additional Info Panel */}
       <motion.div 
