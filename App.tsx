@@ -202,26 +202,34 @@ export default function App() {
       if (value !== previousValue) {
         const numCurrent = parseFloat(value.replace(/[^0-9.-]/g, ''))
         const numPrevious = parseFloat(previousValue.replace(/[^0-9.-]/g, ''))
-        
-        if (numCurrent > numPrevious) {
-          setBgColor('bg-emerald-300/40 dark:bg-emerald-500/20')
-        } else if (numCurrent < numPrevious) {
-          setBgColor('bg-rose-300/40 dark:bg-rose-500/20')
-        }
-        
-        const timer = setTimeout(() => {
+
+        // Reset to base first so repeated moves in same direction still flash
+        setBgColor('bg-muted')
+
+        const highlight = numCurrent > numPrevious
+          ? 'bg-emerald-300/60 dark:bg-emerald-500/30'
+          : 'bg-rose-300/60 dark:bg-rose-500/30'
+
+        const startFlash = window.setTimeout(() => {
+          setBgColor(highlight)
+        }, 20)
+
+        const endFlash = window.setTimeout(() => {
           setBgColor('bg-muted')
-        }, 2000)
-        
-        return () => clearTimeout(timer)
+        }, 900)
+
+        return () => {
+          window.clearTimeout(startFlash)
+          window.clearTimeout(endFlash)
+        }
       }
     }, [value, previousValue])
 
     return (
       <div 
-        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-3 sm:p-5 md:p-6`}
+        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-5 sm:p-8 md:p-10`}
       >
-        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[72px] sm:text-[88px] md:text-[96px] lg:text-[112px] text-nowrap">
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[96px] sm:text-[128px] md:text-[160px] lg:text-[192px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
@@ -264,17 +272,17 @@ export default function App() {
       <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
         <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center">
           <div className="flex flex-col gap-4 items-start md:items-start">
-            <div className="font-bold text-foreground/90 text-[26px] sm:text-[28px] md:text-[24px] text-left">
+            <div className="font-bold text-foreground/90 text-[34px] sm:text-[36px] md:text-[28px] text-left">
               <p className="leading-none">BTC / USDT</p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-start gap-3 sm:gap-4">
-              <div className="inline-flex items-start gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit md:mt-1 scale-110 sm:scale-100 origin-left">
-                <div className="size-9 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm self-start">
-                  <span className="text-[16px] leading-none">₿</span>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-start gap-4 sm:gap-6">
+              <div className="inline-flex items-center gap-3 bg-muted rounded-3xl border border-border px-4 py-3 w-fit md:mt-1 scale-125 sm:scale-110 origin-left">
+                <div className="size-12 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+                  <span className="text-[18px] leading-none">₿</span>
                 </div>
-                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[24px] leading-none self-start">$</div>
+                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[36px] sm:text-[28px] leading-none">$</div>
               </div>
-              <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
                 <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
                 <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
                 <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
