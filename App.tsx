@@ -106,7 +106,7 @@ export default function App() {
         return next
       })
     }
-    interval = window.setInterval(step, 40)
+    interval = window.setInterval(step, 28)
     return () => {
       if (interval) window.clearInterval(interval)
     }
@@ -268,11 +268,11 @@ export default function App() {
               <p className="leading-none">BTC / USDT</p>
             </div>
             <div className="flex flex-col md:flex-row md:items-center md:justify-start gap-3 sm:gap-4">
-              <div className="inline-flex items-center gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit md:mt-1 scale-110 sm:scale-100 origin-left">
-                <div className="size-9 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+              <div className="inline-flex items-start gap-2 bg-muted rounded-2xl border border-border px-3 py-2 w-fit md:mt-1 scale-110 sm:scale-100 origin-left">
+                <div className="size-9 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm self-start">
                   <span className="text-[16px] leading-none">₿</span>
                 </div>
-                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[24px] leading-none">$</div>
+                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[24px] leading-none self-start">$</div>
               </div>
               <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
                 <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
@@ -288,11 +288,14 @@ export default function App() {
       {/* Bottom-right: Typewriter footer */}
       <motion.div 
         className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+12px)] sm:bottom-6 sm:right-6 z-20 text-muted-foreground"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: footerDim ? 0.6 : 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: footerDim ? 0.65 : 1, y: 0 }}
+        transition={{
+          opacity: { duration: 0.9, ease: 'easeOut' },
+          y: { type: 'spring', stiffness: 220, damping: 24 }
+        }}
       >
-        <div className="text-[11px] sm:text-xs font-['Space Grotesk',_sans-serif] select-none">
+        <div className="text-[13px] sm:text-sm font-['Space Grotesk',_sans-serif] select-none">
           <span>{footerPreText.slice(0, Math.min(footerTypedCount, footerPreText.length))}</span>
           <a
             className="underline decoration-dotted hover:decoration-solid hover:text-foreground transition-colors"
@@ -305,7 +308,7 @@ export default function App() {
               : ''}
           </a>
           {footerTypedCount < footerPreText.length + footerLinkText.length && (
-            <span className="ml-0.5 opacity-60">|</span>
+            <span className="ml-0.5 opacity-60 animate-pulse">|</span>
           )}
         </div>
       </motion.div>
