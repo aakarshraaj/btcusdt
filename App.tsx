@@ -16,6 +16,13 @@ export default function App() {
   const lastHeadlineRef = useRef<number>(0)
   const [showHeadline, setShowHeadline] = useState(false)
   const [headlineText, setHeadlineText] = useState('')
+  // Track recent prices for 10-min change + audio tings
+  const priceHistoryRef = useRef<Array<{ ts: number, price: number }>>([])
+  const [change10m, setChange10m] = useState(0)
+  const lastTingUpRef = useRef<number>(0)
+  const lastTingDownRef = useRef<number>(0)
+  // Visit streak (gamification)
+  const [streak, setStreak] = useState<number>(1)
   // Footer typing effect
   const footerPreText = 'Designed and Built by '
   const footerLinkText = 'Aakarsh'
@@ -54,6 +61,28 @@ export default function App() {
 
           lastPriceRef.current = newPrice
           lastVolumeRef.current = newVolume
+
+          // Update history for 5m change
+          const now = Date.now()
+          priceHistoryRef.current.push({ ts: now, price: newPrice })
+          const tenMinAgo = now - 10 * 60 * 1000
+          while (priceHistoryRef.current.length && priceHistoryRef.current[0].ts < tenMinAgo) {
+            priceHistoryRef.current.shift()
+          }
+          const first = priceHistoryRef.current[0]?.price
+          if (first) {
+            const change = ((newPrice - first) / first) * 100
+            setChange10m(change)
+            // Play tings on threshold crossing with 30s cooldown per direction
+            const cooldown = 30_000
+            if (change >= 2 && now - lastTingUpRef.current > cooldown) {
+              lastTingUpRef.current = now
+              playPing(1200)
+            } else if (change <= -2 && now - lastTingDownRef.current > cooldown) {
+              lastTingDownRef.current = now
+              playPing(520)
+            }
+          }
         } catch (error) {
           console.error('Error parsing WebSocket data:', error)
         }
@@ -89,6 +118,39 @@ export default function App() {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
+    }
+  }, [])
+
+  // Streak logic (daily visits)
+  useEffect(() => {
+    try {
+      const key = 'visit_streak_v1'
+      const today = new Date()
+      const todayStr = today.toISOString().slice(0, 10)
+      const raw = localStorage.getItem(key)
+      if (!raw) {
+        localStorage.setItem(key, JSON.stringify({ lastVisit: todayStr, streak: 1 }))
+        setStreak(1)
+        return
+      }
+      const obj = JSON.parse(raw)
+      const last = obj?.lastVisit as string
+      const prev = new Date(last)
+      const diffDays = Math.floor((today.getTime() - new Date(prev.toISOString().slice(0,10)).getTime()) / (24 * 60 * 60 * 1000))
+      if (todayStr === last) {
+        setStreak(obj.streak || 1)
+        return
+      }
+      if (diffDays === 1) {
+        const next = (obj.streak || 1) + 1
+        setStreak(next)
+        localStorage.setItem(key, JSON.stringify({ lastVisit: todayStr, streak: next }))
+      } else {
+        setStreak(1)
+        localStorage.setItem(key, JSON.stringify({ lastVisit: todayStr, streak: 1 }))
+      }
+    } catch (_) {
+      // ignore
     }
   }, [])
 
@@ -227,9 +289,9 @@ export default function App() {
 
     return (
       <div 
-        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-2xl sm:rounded-3xl lg:rounded-[3rem] p-5 sm:p-8 md:p-10`}
+        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] p-4 sm:p-6 md:p-8 lg:p-10`}
       >
-        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[96px] sm:text-[128px] md:text-[160px] lg:text-[192px] text-nowrap">
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[clamp(80px,18vw,112px)] sm:text-[112px] md:text-[128px] lg:text-[160px] xl:text-[192px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
@@ -252,15 +314,19 @@ export default function App() {
       )}
       {/* Top bar: Theme + Status */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
-        {/* Theme switcher */}
+        {/* Theme switcher (modern toggle) */}
         <button
           aria-label="Toggle theme"
+          title="Toggle theme"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="group relative inline-flex items-center h-7 rounded-full px-2 bg-muted text-foreground border border-border transition-colors"
+          className="relative inline-flex w-14 h-7 items-center rounded-full bg-muted/80 text-foreground border border-border shadow-sm cursor-pointer transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/40"
         >
           <span className="sr-only">Toggle theme</span>
-          <span className="text-[10px] mr-1">{theme === 'dark' ? '🌙' : '☀️'}</span>
-          <span className="text-[10px] capitalize opacity-70 group-hover:opacity-100 hidden sm:inline">{theme}</span>
+          <span
+            className={`size-6 rounded-full bg-background text-[11px] inline-flex items-center justify-center shadow-sm transition-transform duration-300 ease-out ml-0.5 ${theme === 'dark' ? 'translate-x-7' : 'translate-x-0'}`}
+          >
+            {theme === 'dark' ? '🌙' : '☀️'}
+          </span>
         </button>
 
         <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
@@ -270,24 +336,43 @@ export default function App() {
       </div>
 
       <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
-        <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center">
-          <div className="flex flex-col gap-4 items-start md:items-start">
-            <div className="font-bold text-foreground/90 text-[34px] sm:text-[36px] md:text-[28px] text-left">
-              <p className="leading-none">BTC / USDT</p>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-start md:justify-start gap-4 sm:gap-6">
-              <div className="inline-flex items-center gap-3 bg-muted rounded-3xl border border-border px-4 py-3 w-fit md:mt-1 scale-125 sm:scale-110 origin-left">
-                <div className="size-12 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
-                  <span className="text-[18px] leading-none">₿</span>
+        <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center mx-auto">
+          <div className="flex flex-col gap-4 items-start md:items-start w-full">
+            {/* Pair and currency pill inline, centered with blocks on desktop */}
+            <div className="flex items-start gap-4 sm:gap-6 self-start md:self-start lg:-ml-6">
+              <div className="inline-flex items-center gap-3 bg-muted rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] border border-border px-4 py-3 sm:px-5 sm:py-4 w-fit md:mt-1 origin-left">
+                <div className="size-10 sm:size-12 md:size-14 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+                  <span className="text-[16px] sm:text-[18px] md:text-[20px] leading-none">₿</span>
                 </div>
-                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[36px] sm:text-[28px] leading-none">$</div>
+                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[28px] md:text-[32px] leading-none">$</div>
               </div>
-              <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-                <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
-                <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
-                <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+              <div className="mt-0.5 self-start flex flex-col justify-between whitespace-nowrap h-12 sm:h-14 md:h-16">
+                <div className="font-bold text-foreground leading-none tracking-[0.02em] text-[30px] sm:text-[36px] md:text-[40px]">BTC</div>
+                <div className="text-muted-foreground leading-none text-[18px] sm:text-[20px] md:text-[24px]">USDT</div>
               </div>
             </div>
+
+            {/* Blocks row + change label */}
+            <div className="relative inline-flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 md:items-start md:justify-start lg:-ml-6 w-full sm:w-auto">
+              <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
+              <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+              <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+              <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none">
+                <span className={change10m >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                  {change10m >= 0 ? '+' : ''}{change10m.toFixed(2)}% in 10 mins
+                </span>
+              </div>
+            </div>
+
+            {/* Streak badge */}
+            {streak > 1 && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-accent/60 text-accent-foreground border border-border px-3 py-1 text-xs font-['Space Grotesk',_sans-serif]">
+                <span>🔥</span>
+                <span>
+                  You’ve checked BTC price {streak} {streak === 1 ? 'day' : 'days'} in a row! <span className="opacity-70">Keep the streak alive.</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -303,7 +388,7 @@ export default function App() {
           y: { type: 'spring', stiffness: 220, damping: 24 }
         }}
       >
-        <div className="text-[13px] sm:text-sm font-['Space Grotesk',_sans-serif] select-none">
+        <div className="text-[12px] sm:text-sm font-['Space Grotesk',_sans-serif] select-none max-w-[90vw] text-right whitespace-normal leading-tight">
           <span>{footerPreText.slice(0, Math.min(footerTypedCount, footerPreText.length))}</span>
           <a
             className="underline decoration-dotted hover:decoration-solid hover:text-foreground transition-colors"
@@ -323,7 +408,7 @@ export default function App() {
 
       {/* Additional Info Panel */}
       <motion.div 
-        className="relative mx-4 mt-6 mb-[calc(env(safe-area-inset-bottom)+72px)] sm:mx-0 sm:mt-0 sm:mb-0 sm:fixed sm:left-8 sm:right-auto sm:bottom-8 bg-card rounded-2xl sm:rounded-3xl shadow-lg p-3 sm:p-4 border border-border max-w-none sm:max-w-[320px]"
+        className="relative inline-flex flex-col w-fit max-w-[90vw] mx-4 mt-6 mb-[calc(env(safe-area-inset-bottom)+72px)] sm:mx-0 sm:mt-0 sm:mb-0 sm:fixed sm:left-8 sm:right-auto sm:bottom-8 bg-card rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 border border-border sm:max-w-[360px]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
