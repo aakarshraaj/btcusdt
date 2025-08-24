@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 
@@ -15,8 +16,18 @@ export default function CalculatorsPage() {
       </Head>
 
       <main style={{ padding: 20, maxWidth: 1100, margin: "0 auto" }}>
-        <h1>Crypto Profit Calculator</h1>
-        <CryptoProfitCalculator />
+        <h1 style={{ fontSize: 34, marginBottom: 8 }}>Crypto Profit Calculator</h1>
+        <p style={{ color: "#6b7280", marginBottom: 12 }}>
+          Live Binance prices, fee modes (Sell Only / Buy Only / Both), USD ↔ coin toggles, and instant net profit & ROI calculations.
+        </p>
+
+        <section style={{ background: "#fff", padding: 12, borderRadius: 8, marginBottom: 28 }}>
+          <CryptoProfitCalculator />
+        </section>
+
+        <article style={{ lineHeight: 1.6, color: "#374151" }}>
+          {/* Optional: include SEO copy from content/seo-home.md here */}
+        </article>
       </main>
     </>
   );
