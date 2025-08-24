@@ -204,6 +204,12 @@ export default function App() {
     }
   }
 
+  /* Added: safe formatter to avoid toFixed on null/undefined */
+  function formatPriceSafe(value?: number | null) {
+    if (value === null || value === undefined || !isFinite(value) || value <= 0) return "0.00";
+    return value.toFixed(2);
+  }
+
   // Format price into segments with dynamic slicing for correct thousands separator
   const formatPrice = (price: number) => {
     const priceStr = price.toFixed(2)
