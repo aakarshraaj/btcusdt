@@ -105,8 +105,8 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
     // Clear refs to prevent false data
     lastPriceRef.current = 0;
     
-    // Connect to new crypto WebSocket
-    connectWebSocket(crypto);
+    // Note: WebSocket connection will be handled by useEffect when selectedCrypto changes
+    // This prevents double connections and potential price flicker
     
     // Clear switching state after a delay to allow data to stabilize
     setTimeout(() => {
