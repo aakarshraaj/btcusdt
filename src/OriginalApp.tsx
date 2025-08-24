@@ -209,31 +209,17 @@ export default function App() {
     if (value === null || value === undefined || !isFinite(value) || value <= 0) return "0.00";
     return value.toFixed(2);
   }
-
+ 
   // Format price into segments with dynamic slicing for correct thousands separator
-  const formatPrice = (price: number) => {
+  const formatPrice = (price?: number | null) => {
+    if (price == null || !isFinite(price) || price <= 0) return { first: '0', middle: '0', decimal: '.00' }
     const priceStr = price.toFixed(2)
-    const parts = priceStr.split('.')
-    const integerPart = parts[0]
-    const decimalPart = `.${parts[1]}`
-    
-    // Dynamic slicing based on number of digits
-    const digitCount = integerPart.length
-    
-    if (digitCount >= 6) {
-      // 6+ digits: first 3, middle 3, decimal (e.g., BTC: 115,990.55 → "115—990—.55")
-      const first = integerPart.slice(0, 3)
-      const middle = integerPart.slice(3, 6)
-      return { first, middle, decimal: decimalPart }
-    } else if (digitCount >= 4) {
-      // 4-5 digits: first 1-2, middle 3, decimal (e.g., ETH: 4,990.44 → "4—990—.44")
-      const first = integerPart.slice(0, digitCount - 3)
-      const middle = integerPart.slice(digitCount - 3)
-      return { first, middle, decimal: decimalPart }
-    } else {
-      // 1-3 digits: all digits, no middle, decimal (e.g., SOL: 202.23 → "202—.23")
-      return { first: integerPart, middle: '', decimal: decimalPart }
-    }
+    const [intPart, decPart = '00'] = priceStr.split('.')
+    if (price < 1000) return { first: intPart, middle: `.${decPart}`, decimal: '' }
+    if (intPart.length <= 3) return { first: intPart, middle: '000', decimal: `.${decPart}` }
+    const first = intPart.slice(0, -3) || '0'
+    const middle = intPart.slice(-3)
+    return { first, middle, decimal: `.${decPart}` }
   }
 
   const currentParts = formatPrice(currentPrice)
