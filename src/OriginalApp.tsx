@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
+import { useNavigate } from 'react-router-dom'
 
 export default function App() {
+  const navigate = useNavigate()
   const [currentPrice, setCurrentPrice] = useState(115055.31)
   const [previousPrice, setPreviousPrice] = useState(115055.31)
   const [volume, setVolume] = useState(0.12345)
@@ -312,8 +314,18 @@ export default function App() {
           </div>
         </motion.div>
       )}
-      {/* Top bar: Theme + Status */}
+      {/* Top bar: Theme + Status + Calculators */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
+        {/* Calculators button */}
+        <motion.button
+          onClick={() => navigate('/calculators')}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Calculators
+        </motion.button>
+
         {/* Theme switcher (modern toggle) */}
         <button
           aria-label="Toggle theme"
