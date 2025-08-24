@@ -20,12 +20,15 @@ export default function PriceDisplay() {
 
   return (
     <div 
-      className="w-full max-w-[1100px] mx-auto relative"
+      className="mx-auto relative"
       style={{ 
         minHeight: 180, 
         display: "flex", 
         alignItems: "center", 
         justifyContent: "center",
+        // Make it more compact and content-hugging
+        width: "fit-content",
+        maxWidth: "90vw",
       }}
     >
       {/* LOADER - renders on top with fade transition */}
@@ -37,9 +40,8 @@ export default function PriceDisplay() {
           }}
         >
           <div 
-            className="flex items-center justify-center gap-4 px-8"
+            className="flex items-center justify-center gap-4"
             style={{
-              width: "100%",
               height: 140,
               borderRadius: 16
             }}
@@ -47,15 +49,15 @@ export default function PriceDisplay() {
             {parts.twoBlocks ? (
               // 2-block skeleton for SOL
               <>
-                <div className="w-1/2 h-32 bg-gray-800 rounded-2xl animate-pulse" />
-                <div className="w-1/3 h-32 bg-gray-800 rounded-2xl animate-pulse" />
+                <div className="h-32 bg-gray-800 rounded-2xl animate-pulse" style={{ width: '200px' }} />
+                <div className="h-32 bg-gray-800 rounded-2xl animate-pulse" style={{ width: '160px' }} />
               </>
             ) : (
               // 3-block skeleton for BTC/ETH
               <>
-                <div className="w-1/3 h-32 bg-gray-800 rounded-2xl animate-pulse" />
-                <div className="w-1/3 h-32 bg-gray-800 rounded-2xl animate-pulse" />
-                <div className="w-1/4 h-32 bg-gray-800 rounded-2xl animate-pulse" />
+                <div className="h-32 bg-gray-800 rounded-2xl animate-pulse" style={{ width: '140px' }} />
+                <div className="h-32 bg-gray-800 rounded-2xl animate-pulse" style={{ width: '140px' }} />
+                <div className="h-32 bg-gray-800 rounded-2xl animate-pulse" style={{ width: '120px' }} />
               </>
             )}
           </div>
@@ -77,7 +79,7 @@ export default function PriceDisplay() {
 
       {/* PRICE DISPLAY - hides when loading */}
       <div 
-        className={`flex items-center justify-center gap-4 w-full ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`flex items-center justify-center gap-4 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         style={{ 
           transition: `opacity ${TRANS_MS}ms ease-out`,
           minHeight: 140
@@ -89,7 +91,7 @@ export default function PriceDisplay() {
             <div 
               className="flex items-center justify-center rounded-2xl"
               style={{ 
-                flex: '0.6', 
+                width: '200px', // Fixed width instead of flex
                 minHeight: 92, 
                 background: '#1a1a1a'
               }}
@@ -101,7 +103,7 @@ export default function PriceDisplay() {
             <div 
               className="flex items-center justify-center rounded-2xl"
               style={{ 
-                flex: '0.4', 
+                width: '160px', // Fixed width instead of flex
                 minHeight: 92, 
                 background: '#8B0000'
               }}
@@ -117,7 +119,7 @@ export default function PriceDisplay() {
             <div 
               className="flex items-center justify-center rounded-2xl"
               style={{ 
-                flex: '0.35', 
+                width: '140px', // Fixed width instead of flex
                 minHeight: 92, 
                 background: '#1a1a1a'
               }}
@@ -129,7 +131,7 @@ export default function PriceDisplay() {
             <div 
               className="flex items-center justify-center rounded-2xl"
               style={{ 
-                flex: '0.35', 
+                width: '140px', // Fixed width instead of flex
                 minHeight: 92, 
                 background: '#1a1a1a'
               }}
@@ -141,7 +143,7 @@ export default function PriceDisplay() {
             <div 
               className="flex items-center justify-center rounded-2xl"
               style={{ 
-                flex: '0.3', 
+                width: '120px', // Fixed width instead of flex
                 minHeight: 92, 
                 background: '#8B0000'
               }}

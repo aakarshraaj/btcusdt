@@ -4,9 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useCrypto } from './context/CryptoContext'
 import { formatPriceSafe, splitPriceParts } from "./utils/formatPrice"
 import { PriceSkeleton } from './components/ui/PriceSkeleton'
+import { useIsMobile } from '../components/ui/use-mobile'
 
 export default function App() {
   const navigate = useNavigate()
+  
+  // Mobile detection for responsive layout adjustments
+  const isMobile = useIsMobile()
   
   // Use shared crypto context instead of local state
   const { currentPrice, previousPrice, selectedCrypto, connectionStatus, isSwitchingCrypto, setSelectedCrypto } = useCrypto()
@@ -348,7 +352,7 @@ export default function App() {
       </div>
 
       {/* Crypto Switcher in the center top */}
-      <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+      <div className={`absolute top-3 z-10 ${isMobile ? 'left-3' : 'left-1/2'} ${isMobile ? '' : 'transform -translate-x-1/2'}`}>
         <div className="inline-flex items-center gap-1 bg-black/85 text-white rounded-xl p-1 shadow-lg border border-white/10">
           {SUPPORTED_CRYPTOS.map((crypto) => (
             <button
