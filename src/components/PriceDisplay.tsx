@@ -4,7 +4,7 @@ import { useCrypto } from "../context/CryptoContext";
 /**
  * 3-block PriceDisplay (stable height, no flicker)
  * - left / middle / right blocks (right = decimal)
- * - when integer < 1000 we show a small placeholder in the middle block so nothing is empty
+ * - when integer < 1000 we show a small placeholder in the left block and the integer in the middle block
  * - loader covers the whole block and cross-fades into the price
  */
 export default function PriceDisplay() {
@@ -23,29 +23,24 @@ export default function PriceDisplay() {
         right: `.${decPart}`,
       };
     }
-    // integer <= 3 digits: show integer in middle block, keep left placeholder
+    // integer <= 3 digits: keep left placeholder, integer in middle
     return { left: "", middle: intPart, right: `.${decPart}` };
   };
 
   const parts = splitPrice(currentPrice);
 
   // Helper: show placeholder dot when left is empty (keeps three-block visual)
-  const MiddleVisual = ({ text }: { text: string }) => {
-    if (text) {
-      return <div style={{ fontSize: 72, fontWeight: 800 }}>{text}</div>;
-    }
-    return (
-      <div
-        aria-hidden
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: 999,
-          background: "rgba(255,255,255,0.2)",
-        }}
-      />
-    );
-  };
+  const LeftPlaceholder = () => (
+    <div
+      aria-hidden
+      style={{
+        width: 22,
+        height: 22,
+        borderRadius: 999,
+        background: "rgba(255,255,255,0.14)",
+      }}
+    />
+  );
 
   return (
     <div
@@ -120,7 +115,7 @@ export default function PriceDisplay() {
               padding: "0 32px",
             }}
           >
-            {/* Left block */}
+            {/* Left block: placeholder when no leading group */}
             <div
               style={{
                 flex: 1,
@@ -136,12 +131,11 @@ export default function PriceDisplay() {
               {parts.left ? (
                 <div style={{ fontSize: 72, fontWeight: 800 }}>{parts.left}</div>
               ) : (
-                // if no left int, show the middle (so left isn't empty) but smaller
-                <div style={{ fontSize: 56, fontWeight: 800 }}>{parts.middle}</div>
+                <LeftPlaceholder />
               )}
             </div>
 
-            {/* Middle block */}
+            {/* Middle block: when integer <=3 it's shown here; otherwise shows last 3 digits */}
             <div
               style={{
                 flex: 0.7,
@@ -154,12 +148,9 @@ export default function PriceDisplay() {
                 color: "var(--text, #fff)",
               }}
             >
-              {/* If left was empty we already showed the integer on left; render placeholder OR last3 */}
-              {parts.left ? (
-                <div style={{ fontSize: 72, fontWeight: 800 }}>{parts.middle}</div>
-              ) : (
-                <MiddleVisual text={""} />
-              )}
+              <div style={{ fontSize: parts.left ? 72 : 72, fontWeight: 800 }}>
+                {parts.middle || ""}
+              </div>
             </div>
 
             {/* Right (decimal) block */}
