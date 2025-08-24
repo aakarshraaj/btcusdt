@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { CalculatorLayout } from '../components/CalculatorLayout';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 
 interface ProfitCalculatorProps {
   onHomeClick: () => void;
@@ -15,6 +22,19 @@ interface Results {
   coins: number;
 }
 
+interface CryptoPair {
+  symbol: string;
+  display: string;
+  name: string;
+}
+
+const CRYPTO_PAIRS: CryptoPair[] = [
+  { symbol: 'BTCUSDT', display: 'BTC/USDT', name: 'Bitcoin' },
+  { symbol: 'ETHUSDT', display: 'ETH/USDT', name: 'Ethereum' },
+  { symbol: 'SOLUSDT', display: 'SOL/USDT', name: 'Solana' },
+  { symbol: 'ADAUSDT', display: 'ADA/USDT', name: 'Cardano' },
+];
+
 export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalculatorProps) {
   const [buyPrice, setBuyPrice] = useState<string>('');
   const [sellPrice, setSellPrice] = useState<string>('');
@@ -22,7 +42,38 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
   const [investmentType, setInvestmentType] = useState<'usd' | 'coins'>('usd');
   const [fees, setFees] = useState<string>('0.1');
   const [feeMode, setFeeMode] = useState<'sell' | 'buy' | 'both'>('sell');
+  const [selectedCoin, setSelectedCoin] = useState<string>('BTCUSDT');
   const [results, setResults] = useState<Results | null>(null);
+  const [fetchingPrice, setFetchingPrice] = useState<{ buy: boolean; sell: boolean }>({ buy: false, sell: false });
+
+  const fetchCurrentPrice = async (symbol: string): Promise<number | null> => {
+    try {
+      const response = await fetch(
+        `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return parseFloat(data.price);
+    } catch (error) {
+      console.error('Error fetching price:', error);
+      return null;
+    }
+  };
+
+  const handleFetchPrice = async (field: 'buy' | 'sell') => {
+    setFetchingPrice(prev => ({ ...prev, [field]: true }));
+    const price = await fetchCurrentPrice(selectedCoin);
+    if (price) {
+      if (field === 'buy') {
+        setBuyPrice(price.toString());
+      } else {
+        setSellPrice(price.toString());
+      }
+    }
+    setFetchingPrice(prev => ({ ...prev, [field]: false }));
+  };
 
   const calculateProfit = () => {
     const buy = parseFloat(buyPrice);
@@ -104,28 +155,67 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
+                Cryptocurrency
+              </label>
+              <Select value={selectedCoin} onValueChange={setSelectedCoin}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select cryptocurrency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CRYPTO_PAIRS.map((pair) => (
+                    <SelectItem key={pair.symbol} value={pair.symbol}>
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{pair.display}</span>
+                        <span className="text-muted-foreground text-sm">({pair.name})</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Buy Price (USD)
               </label>
-              <input
-                type="number"
-                value={buyPrice}
-                onChange={(e) => setBuyPrice(e.target.value)}
-                placeholder="Enter buy price..."
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={buyPrice}
+                  onChange={(e) => setBuyPrice(e.target.value)}
+                  placeholder="Enter buy price..."
+                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  onClick={() => handleFetchPrice('buy')}
+                  disabled={fetchingPrice.buy}
+                  className="px-3 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-accent text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {fetchingPrice.buy ? '...' : 'Fetch'}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
                 Sell Price (USD)
               </label>
-              <input
-                type="number"
-                value={sellPrice}
-                onChange={(e) => setSellPrice(e.target.value)}
-                placeholder="Enter sell price..."
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={sellPrice}
+                  onChange={(e) => setSellPrice(e.target.value)}
+                  placeholder="Enter sell price..."
+                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  onClick={() => handleFetchPrice('sell')}
+                  disabled={fetchingPrice.sell}
+                  className="px-3 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-accent text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {fetchingPrice.sell ? '...' : 'Fetch'}
+                </button>
+              </div>
             </div>
 
             <div>
