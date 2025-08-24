@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 // The pages folder lives inside src — use a relative path from this file (src/App.tsx):
 import { CalculatorsIndex as Calculators } from './pages/CalculatorsIndex';
 import { PriceSkeleton } from './components/ui/PriceSkeleton';
+import { useIsMobile } from '../components/ui/use-mobile';
 // If the file exists at src/Calculators.tsx, use this instead:
 // import Calculators from './Calculators';
 /* No additional code needed at $PLACEHOLDER$ */
@@ -67,6 +68,8 @@ export default function App() {
   const [isSwitchingCrypto, setIsSwitchingCrypto] = useState(false)
   // Loading UX: true while switching crypto or until first WS tick arrives
   const [isLoading, setIsLoading] = useState(true)
+  // Mobile detection for responsive layout adjustments
+  const isMobile = useIsMobile()
   const firstTickReceivedRef = useRef(false)
   
   // import safe formatters locally (use the util file)
@@ -421,17 +424,19 @@ export default function App() {
             <div
               style={{
                 position: 'fixed',
-                top: 12,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 9999,
+                top: isMobile ? 12 : 12, // Keep at top but position differently on mobile
+                left: isMobile ? '12px' : '50%', // Left-aligned on mobile, centered on desktop
+                transform: isMobile ? 'none' : 'translateX(-50%)', // No transform on mobile
+                zIndex: isMobile ? 5 : 9999, // Lower z-index on mobile to prevent blocking calculator button
                 background: 'rgba(0,0,0,0.85)',
                 color: '#fff',
                 padding: '6px',
                 borderRadius: 12,
                 display: 'inline-flex',
                 gap: 6,
-                boxShadow: '0 6px 18px rgba(0,0,0,0.6)'
+                boxShadow: '0 6px 18px rgba(0,0,0,0.6)',
+                // Ensure it doesn't take up too much space horizontally on mobile
+                maxWidth: isMobile ? '200px' : 'none'
               }}
             >
               {SUPPORTED_CRYPTOS.map((crypto) => (
@@ -469,7 +474,7 @@ export default function App() {
             )}
 
             {/* Top bar: UI Toggle + Theme + Status */}
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
+            <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 ${isMobile ? 'z-10' : 'z-10'}`}>
               {/* Theme switcher */}
               {showUI && (
                 <button
