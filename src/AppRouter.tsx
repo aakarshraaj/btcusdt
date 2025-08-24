@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import App from './OriginalApp';
+import App from './OriginalApp';  // Use the working OriginalApp
 import { CalculatorsIndex } from './pages/CalculatorsIndex';
 import { ProfitCalculator } from './pages/ProfitCalculator';
 import { DCACalculator } from './pages/DCACalculator';
