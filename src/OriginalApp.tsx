@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function App() {
   const navigate = useNavigate()
-  const [currentPrice, setCurrentPrice] = useState(115055.31)
+  const [currentPrice, setCurrentPrice] = useState(115055.31) // Reset to reasonable default
   const [previousPrice, setPreviousPrice] = useState(115055.31)
   const [volume, setVolume] = useState(0.12345)
   const [previousVolume, setPreviousVolume] = useState(0.12345)
@@ -163,8 +163,15 @@ export default function App() {
     setVolume(0)
     setChange10m(0)
     
-    // Clear price history
+    // Clear price history and refs to prevent false beeping
     priceHistoryRef.current = []
+    lastPriceRef.current = 0
+    lastVolumeRef.current = 0
+    
+    // Reset audio timing refs to prevent false triggers
+    lastTingUpRef.current = 0
+    lastTingDownRef.current = 0
+    lastHeadlineRef.current = 0
     
     // Connect to new crypto WebSocket
     connectWebSocket(crypto)
@@ -280,15 +287,30 @@ export default function App() {
     }
   }
 
-  // Format price into segments (3 blocks)
+  // Format price into segments with dynamic slicing for correct thousands separator
   const formatPrice = (price: number) => {
     const priceStr = price.toFixed(2)
     const parts = priceStr.split('.')
     const integerPart = parts[0]
-    const firstThree = integerPart.slice(0, 3)
-    const middleDigits = integerPart.slice(3).padStart(3, '0')
     const decimalPart = `.${parts[1]}`
-    return { first: firstThree, middle: middleDigits, decimal: decimalPart }
+    
+    // Dynamic slicing based on number of digits
+    const digitCount = integerPart.length
+    
+    if (digitCount >= 6) {
+      // 6+ digits: first 3, middle 3, decimal (e.g., BTC: 115,990.55 → "115—990—.55")
+      const first = integerPart.slice(0, 3)
+      const middle = integerPart.slice(3, 6)
+      return { first, middle, decimal: decimalPart }
+    } else if (digitCount >= 4) {
+      // 4-5 digits: first 1-2, middle 3, decimal (e.g., ETH: 4,990.44 → "4—990—.44")
+      const first = integerPart.slice(0, digitCount - 3)
+      const middle = integerPart.slice(digitCount - 3)
+      return { first, middle, decimal: decimalPart }
+    } else {
+      // 1-3 digits: all digits, no middle, decimal (e.g., SOL: 202.23 → "202—.23")
+      return { first: integerPart, middle: '', decimal: decimalPart }
+    }
   }
 
   const currentParts = formatPrice(currentPrice)
@@ -460,7 +482,9 @@ export default function App() {
             {/* Blocks row + change label */}
             <div className="relative inline-flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 md:items-start md:justify-start lg:-ml-6 w-full sm:w-auto">
               <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
-              <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+              {currentParts.middle && (
+                <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+              )}
               <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
               <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none">
                 <span className={change10m >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
