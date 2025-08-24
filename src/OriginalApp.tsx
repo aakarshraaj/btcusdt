@@ -1,22 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
+import { useCrypto } from './context/CryptoContext'
 
 export default function App() {
   const navigate = useNavigate()
-  const [currentPrice, setCurrentPrice] = useState(115055.31) // Reset to reasonable default
-  const [previousPrice, setPreviousPrice] = useState(115055.31)
+  
+  // Use shared crypto context instead of local state
+  const { currentPrice, previousPrice, selectedCrypto, connectionStatus, setSelectedCrypto } = useCrypto()
+  
   const [volume, setVolume] = useState(0.12345)
   const [previousVolume, setPreviousVolume] = useState(0.12345)
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
 
-  const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastPriceRef = useRef<number>(currentPrice)
   const lastVolumeRef = useRef<number>(volume)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const lastHeadlineRef = useRef<number>(0)
-  const connectionIdRef = useRef<number>(0)
   const [showHeadline, setShowHeadline] = useState(false)
   const [headlineText, setHeadlineText] = useState('')
   // Track recent prices for 10-min change + audio tings
@@ -35,7 +34,6 @@ export default function App() {
   // Multi-crypto support
   const SUPPORTED_CRYPTOS = ['BTC', 'ETH', 'SOL'] as const
   type SupportedCrypto = typeof SUPPORTED_CRYPTOS[number]
-  const [selectedCrypto, setSelectedCrypto] = useState<SupportedCrypto>('BTC')
   const [isSwitchingCrypto, setIsSwitchingCrypto] = useState(false)
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -44,122 +42,13 @@ export default function App() {
     return 'light'
   })
 
-  // WebSocket connection logic with crypto support
-  const connectWebSocket = (crypto: SupportedCrypto = selectedCrypto) => {
-    try {
-      // Close existing connection
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-
-      // Increment connection ID to handle race conditions
-      const connectionId = ++connectionIdRef.current
-
-      const symbolLower = crypto.toLowerCase()
-      const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbolLower}usdt@trade`)
-      wsRef.current = ws
-      
-      // Add connection ID to the WebSocket for tracking
-      ;(ws as any).connectionId = connectionId
-
-      ws.onopen = () => {
-        console.log(`Connected to Binance WebSocket for ${crypto}/USDT`)
-        setConnectionStatus('connected')
-      }
-
-      ws.onmessage = (event) => {
-        // Guard against race conditions during switching
-        if ((ws as any).connectionId !== connectionId) return
-        
-        try {
-          const data = JSON.parse(event.data)
-          const newPrice = parseFloat(data.p)
-          const newVolume = parseFloat(data.q)
-
-          if (!newPrice || isNaN(newPrice)) return
-
-          const oldPrice = lastPriceRef.current
-          lastPriceRef.current = newPrice
-
-          setPreviousPrice(oldPrice)
-          setCurrentPrice(newPrice)
-          setPreviousVolume(lastVolumeRef.current)
-          setVolume(newVolume)
-          lastVolumeRef.current = newVolume
-
-          // Only calculate % if not switching and both old & new are valid
-          if (!isSwitchingCrypto && oldPrice > 0) {
-            const priceChange = ((newPrice - oldPrice) / oldPrice) * 100
-            if (Math.abs(priceChange) >= 5) {
-              const now = Date.now()
-              const cooldown = 30_000
-              if (priceChange >= 5 && now - lastTingUpRef.current > cooldown) {
-                lastTingUpRef.current = now
-                playPing(1200)
-              } else if (priceChange <= -5 && now - lastTingDownRef.current > cooldown) {
-                lastTingDownRef.current = now
-                playPing(520)
-              }
-            }
-          }
-
-          // Update history for 10m change
-          const now = Date.now()
-          priceHistoryRef.current.push({ ts: now, price: newPrice })
-          const tenMinAgo = now - 10 * 60 * 1000
-          while (priceHistoryRef.current.length && priceHistoryRef.current[0].ts < tenMinAgo) {
-            priceHistoryRef.current.shift()
-          }
-          const first = priceHistoryRef.current[0]?.price
-          if (first) {
-            const change = ((newPrice - first) / first) * 100
-            setChange10m(change)
-            // Play tings on threshold crossing with 30s cooldown per direction
-            if (!isSwitchingCrypto) {
-              const cooldown = 30_000
-              if (change >= 2 && now - lastTingUpRef.current > cooldown) {
-                lastTingUpRef.current = now
-                playPing(1200)
-              } else if (change <= -2 && now - lastTingDownRef.current > cooldown) {
-                lastTingDownRef.current = now
-                playPing(520)
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`❌ Parse error for ${crypto}:`, error)
-        }
-      }
-
-      ws.onclose = () => {
-        console.log(`WebSocket connection closed for ${crypto}`)
-        setConnectionStatus('disconnected')
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          setConnectionStatus('connecting')
-          connectWebSocket(crypto)
-        }, 3000)
-      }
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-        setConnectionStatus('disconnected')
-      }
-    } catch (error) {
-      console.error('Error connecting to WebSocket:', error)
-      setConnectionStatus('disconnected')
-    }
-  }
-
   // Function to switch cryptocurrencies
   const switchCrypto = (crypto: SupportedCrypto) => {
     console.log(`Switching to ${crypto}`)
     setIsSwitchingCrypto(true)
     setSelectedCrypto(crypto)
     
-    // Reset price data when switching
-    setPreviousPrice(0)
-    setCurrentPrice(0)
+    // Reset local volume data when switching
     setVolume(0)
     setChange10m(0)
     
@@ -173,27 +62,62 @@ export default function App() {
     lastTingDownRef.current = 0
     lastHeadlineRef.current = 0
     
-    // Connect to new crypto WebSocket
-    connectWebSocket(crypto)
-    
     // Clear switching state after a delay to allow data to stabilize
     setTimeout(() => {
       setIsSwitchingCrypto(false)
     }, 2000)
   }
 
+  // Effect to update local refs when price changes from context
   useEffect(() => {
-    connectWebSocket(selectedCrypto)
+    lastPriceRef.current = currentPrice
+  }, [currentPrice])
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
+  // Effect to handle price change monitoring and audio triggers
+  useEffect(() => {
+    if (!currentPrice || currentPrice <= 0 || isSwitchingCrypto) return
+    
+    const oldPrice = lastPriceRef.current
+    if (!oldPrice || oldPrice <= 0) return
+
+    // Only calculate % if both old & new are valid
+    const priceChange = ((currentPrice - oldPrice) / oldPrice) * 100
+    if (Math.abs(priceChange) >= 5) {
+      const now = Date.now()
+      const cooldown = 30_000
+      if (priceChange >= 5 && now - lastTingUpRef.current > cooldown) {
+        lastTingUpRef.current = now
+        playPing(1200)
+      } else if (priceChange <= -5 && now - lastTingDownRef.current > cooldown) {
+        lastTingDownRef.current = now
+        playPing(520)
       }
     }
-  }, [selectedCrypto])  // Re-connect when crypto changes
+
+    // Update history for 10m change
+    const now = Date.now()
+    priceHistoryRef.current.push({ ts: now, price: currentPrice })
+    const tenMinAgo = now - 10 * 60 * 1000
+    while (priceHistoryRef.current.length && priceHistoryRef.current[0].ts < tenMinAgo) {
+      priceHistoryRef.current.shift()
+    }
+    const first = priceHistoryRef.current[0]?.price
+    if (first) {
+      const change = ((currentPrice - first) / first) * 100
+      setChange10m(change)
+      // Play tings on threshold crossing with 30s cooldown per direction
+      if (!isSwitchingCrypto) {
+        const cooldown = 30_000
+        if (change >= 2 && now - lastTingUpRef.current > cooldown) {
+          lastTingUpRef.current = now
+          playPing(1200)
+        } else if (change <= -2 && now - lastTingDownRef.current > cooldown) {
+          lastTingDownRef.current = now
+          playPing(520)
+        }
+      }
+    }
+  }, [currentPrice, isSwitchingCrypto])
 
   // Streak logic (daily visits)
   useEffect(() => {

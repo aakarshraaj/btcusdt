@@ -5,19 +5,22 @@ import { ProfitCalculator } from './pages/ProfitCalculator';
 import { DCACalculator } from './pages/DCACalculator';
 import { StakingCalculator } from './pages/StakingCalculator';
 import { MiningCalculator } from './pages/MiningCalculator';
+import { CryptoProvider } from './context/CryptoContext';
 
 function AppRouter() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/calculators" element={<CalculatorsPage />} />
-        <Route path="/calculators/profit" element={<ProfitCalculatorPage />} />
-        <Route path="/calculators/dca" element={<DCACalculatorPage />} />
-        <Route path="/calculators/staking" element={<StakingCalculatorPage />} />
-        <Route path="/calculators/mining" element={<MiningCalculatorPage />} />
-      </Routes>
-    </Router>
+    <CryptoProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/calculators" element={<CalculatorsPage />} />
+          <Route path="/calculators/profit" element={<ProfitCalculatorPage />} />
+          <Route path="/calculators/dca" element={<DCACalculatorPage />} />
+          <Route path="/calculators/staking" element={<StakingCalculatorPage />} />
+          <Route path="/calculators/mining" element={<MiningCalculatorPage />} />
+        </Routes>
+      </Router>
+    </CryptoProvider>
   );
 }
 
