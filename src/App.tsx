@@ -4,8 +4,12 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 // If the file exists at src/pages/calculators.tsx, keep as is.
 // Otherwise, update the path to the correct location, for example:
 // import Calculators from './Calculators'; // If located at src/Calculators.tsx
-import Calculators from '../pages/calculators'; // If located at src/pages/calculators.tsx
+// If the file exists at src/pages/calculators.tsx, use the following import:
+import Calculators from '../pages/calculators';
 
+// If the file exists at src/Calculators.tsx, use this instead:
+// import Calculators from './Calculators';
+/* No additional code needed at $PLACEHOLDER$ */
 export default function App() {
   const [currentPrice, setCurrentPrice] = useState(115055.31)
   const [previousPrice, setPreviousPrice] = useState(115055.31)
@@ -44,7 +48,7 @@ export default function App() {
   // Extend WebSocket interface to support our metadata
   interface WebSocketWithMetadata extends WebSocket {
     connectionId?: number
-    symbol?: string
+    symbol?: SupportedCrypto
   }
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -58,126 +62,105 @@ export default function App() {
   
   // Flag to prevent sounds during cryptocurrency switches
   const [isSwitchingCrypto, setIsSwitchingCrypto] = useState(false)
-  
+
   // INDIVIDUAL WEBSOCKET CONNECTIONS - CONNECTION-ID DRIVEN (NO RACE CONDITIONS)
-  const connectWebSocket = (symbol: 'BTC' | 'ETH' | 'SOL') => {
+  const connectWebSocket = (symbol: SupportedCrypto) => {
     try {
-      // Close any existing connection first
-      if (wsRef.current) {
+      // If already connected to this symbol, do nothing
+      if (activeConnection === symbol && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        console.log(`ℹ️ Already connected to ${symbol} — skipping`)
+        return
+      }
+
+      // Prevent creating too many reconnects for same symbol
+      reconnectAttemptsRef.current[symbol] = reconnectAttemptsRef.current[symbol] || 0
+      if (reconnectAttemptsRef.current[symbol] >= MAX_RECONNECTS) {
+        console.warn(`⚠️ Max reconnect attempts reached for ${symbol}. Backing off.`)
+        setConnectionStatus('disconnected')
+        return
+      }
+
+      // Close existing connection if present and not already CLOSED
+      if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED && wsRef.current.readyState !== WebSocket.CLOSING) {
         console.log(`🔌 Closing existing connection for ${wsRef.current.symbol}`)
-        wsRef.current.close()
+        try { wsRef.current.close() } catch (_) {}
         wsRef.current = null
       }
-      
-      // Clear active connection state
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+
       setActiveConnection(null)
       setConnectionStatus('connecting')
-      
-      // Create unique connection ID for this socket
+
       const connectionId = Date.now()
-      
-      // Create individual WebSocket for the specific cryptocurrency
       const symbolLower = symbol.toLowerCase()
-      const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbolLower}usdt@ticker`) as WebSocketWithMetadata
-      
-      // Store connection metadata directly on the WebSocket
+
+      // Use the ticker stream (aggregated) — more stable for price + volume
+      const url = `wss://stream.binance.com:9443/ws/${symbolLower}usdt@ticker`
+      console.log(`🚀 Creating NEW WebSocket for ${symbol}/USDT -> ${url} (ID: ${connectionId})`)
+
+      const ws = new WebSocket(url) as WebSocketWithMetadata
       ws.connectionId = connectionId
       ws.symbol = symbol
-      
-      console.log(`🚀 Creating NEW WebSocket for ${symbol}/USDT (ID: ${connectionId})`)
-      
-      // Store connection reference
       wsRef.current = ws
-      
+
       ws.onopen = () => {
-        // Check if this is still the current connection
-        if (ws.connectionId !== connectionId) return // stale connection
-        console.log(`✅ WebSocket OPENED for ${symbol}/USDT (ID: ${connectionId})`)
+        if (ws.connectionId !== connectionId) return
+        console.log(`✅ WebSocket OPEN for ${symbol} (ID: ${connectionId})`)
         setConnectionStatus('connected')
         setActiveConnection(symbol)
+        // reset reconnect attempts on success
+        reconnectAttemptsRef.current[symbol] = 0
       }
-      
+
       ws.onmessage = (event) => {
-        // Check if this is still the current connection
-        if (ws.connectionId !== connectionId) return // stale connection, ignore
-        
+        if (ws.connectionId !== connectionId) return
         try {
           const data = JSON.parse(event.data)
-          const newPrice = parseFloat(data.c) // ✅ last price from ticker
-          const newVolume = parseFloat(data.v) // ✅ base asset volume from ticker
-          
-          if (!newPrice || isNaN(newPrice)) return
-          
-          console.log(`📊 VALID ${symbol}/USDT data: $${newPrice}, Volume: ${newVolume} (ID: ${connectionId})`)
-          
-          // Ensure connection status is set to connected when data is flowing
-          if (connectionStatus !== 'connected') {
-            setConnectionStatus('connected')
-          }
-          
-          // Use refs for accurate price change calculation (no race conditions)
+          // ticker message uses fields like "c" (last price) and "v" (volume)
+          const newPrice = parseFloat(data.c ?? data.p ?? NaN)
+          const newVolume = parseFloat(data.v ?? data.q ?? 0)
+          if (isNaN(newPrice)) return
           const oldPrice = lastPriceRef.current
           lastPriceRef.current = newPrice
-          
-          // Update state immediately - no race conditions
           setPreviousPrice(oldPrice)
           setCurrentPrice(newPrice)
           setVolume(newVolume)
           setLastUpdated(new Date())
-          
-          // Store last values for next comparison
-          lastVolumeRef.current = newVolume
-          
-          // Only calculate price change if not switching and both old & new are valid
-          if (!isSwitchingCrypto && oldPrice > 0) {
-            const priceChange = ((newPrice - oldPrice) / oldPrice) * 100
-            console.log(`📈 Price change: ${priceChange.toFixed(2)}%`)
-            
-            // Only trigger audio on significant changes (5% or more)
-            if (Math.abs(priceChange) >= 5) {
-              const now = Date.now()
-              const cooldown = 30_000
-              
-              if (priceChange >= 5 && now - lastTingUpRef.current > cooldown) {
-                lastTingUpRef.current = now
-                playPing(1200)
-                console.log(`🔊 UP sound for ${symbol}: +${priceChange.toFixed(2)}%`)
-              } else if (priceChange <= -5 && now - lastTingDownRef.current > cooldown) {
-                lastTingDownRef.current = now
-                playPing(520)
-                console.log(`🔊 DOWN sound for ${symbol}: ${priceChange.toFixed(2)}%`)
-              }
-            }
+        } catch (err) {
+          console.error('❌ WS parse error:', err)
+        }
+      }
+
+      ws.onclose = (ev) => {
+        if (ws.connectionId !== connectionId) return
+        console.warn(`🔌 WebSocket CLOSED for ${symbol} (ID: ${connectionId})`, ev.reason || ev)
+        if (activeConnection === symbol) {
+          setActiveConnection(null)
+          setConnectionStatus('disconnected')
+        }
+        // schedule reconnect with exponential-ish backoff
+        reconnectAttemptsRef.current[symbol] = (reconnectAttemptsRef.current[symbol] || 0) + 1
+        const attempt = reconnectAttemptsRef.current[symbol]
+        const backoff = RECONNECT_BASE_MS * Math.min(10, Math.pow(1.8, attempt))
+        reconnectTimeoutRef.current = setTimeout(() => {
+          // only reconnect if still selected
+          if (selectedCrypto === symbol) {
+            console.log(`♻️ Reconnecting to ${symbol} after ${Math.round(backoff)}ms (attempt ${attempt})`)
+            connectWebSocket(symbol)
           }
-        } catch (error) {
-          console.error(`❌ Parse error for ${symbol}:`, error)
-        }
+        }, backoff) as unknown as NodeJS.Timeout
       }
-      
-      ws.onclose = () => {
-        // Check if this is still the current connection
-        if (ws.connectionId !== connectionId) return // stale connection
-        console.log(`🔌 WebSocket CLOSED for ${symbol}/USDT (ID: ${connectionId})`)
-        
-        // Only set disconnected if this was the active connection AND no new connection is active
-        if (activeConnection === symbol) {
-          setActiveConnection(null)
-          setConnectionStatus('disconnected')
-        }
+
+      ws.onerror = (err) => {
+        if (ws.connectionId !== connectionId) return
+        console.error(`❌ WebSocket error for ${symbol} (ID: ${connectionId}):`, err)
+        // close socket to trigger onclose/backoff logic
+        try { ws.close() } catch (_) {}
       }
-      
-      ws.onerror = (error) => {
-        // Check if this is still the current connection
-        if (ws.connectionId !== connectionId) return // stale connection
-        console.error(`❌ WebSocket error for ${symbol}/USDT (ID: ${connectionId}):`, error)
-        
-        // Only set disconnected if this was the active connection AND no new connection is active
-        if (activeConnection === symbol) {
-          setActiveConnection(null)
-          setConnectionStatus('disconnected')
-        }
-      }
-      
     } catch (error) {
       console.error(`❌ Failed to create WebSocket for ${symbol}:`, error)
       setConnectionStatus('disconnected')
@@ -694,6 +677,11 @@ export default function App() {
                 </div>
               </motion.div>
             )}
+
+            {/* Resume Audio Button (for debugging) */}
+            <button onClick={async () => { if (audioCtxRef.current) { await audioCtxRef.current.resume().catch(()=>{}); console.log('Audio resumed') } }}>
+              Resume Audio
+            </button>
 
 
           </div>
