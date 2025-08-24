@@ -9,7 +9,7 @@ export function DCACalculator({ onHomeClick, onCalculatorClick }: DCACalculatorP
   return (
     <CalculatorLayout
       title="Dollar Cost Averaging Calculator"
-      description="Plan recurring investments over time and see how DCA can help reduce volatility impact."
+      description="Plan recurring investments over time with our dollar cost averaging calculator. See how DCA can help reduce volatility impact in crypto markets."
       onHomeClick={onHomeClick}
     >
       <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -18,7 +18,7 @@ export function DCACalculator({ onHomeClick, onCalculatorClick }: DCACalculatorP
           Coming Soon
         </h2>
         <p className="text-muted-foreground mb-6">
-          This calculator is currently under development. It will help you plan your recurring crypto investments.
+          This dollar cost averaging calculator is currently under development. It will help you plan your recurring crypto investments, calculate average entry prices, and track your DCA strategy performance using BTCUSDT live price data.
         </p>
         <button
           onClick={() => onCalculatorClick('profit')}

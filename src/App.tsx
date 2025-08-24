@@ -1,23 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
+import { formatPriceSafe, splitPriceParts } from './utils/formatPrice'
 import { motion } from 'motion/react'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 // If the file exists at src/pages/calculators.tsx, keep as is.
 // Otherwise, update the path to the correct location, for example:
 // import Calculators from './Calculators'; // If located at src/Calculators.tsx
-// If the file exists at src/pages/calculators.tsx, use the following import:
-import Calculators from '../pages/calculators';
+// The pages folder lives inside src — use a relative path from this file (src/App.tsx):
+import { CalculatorsIndex as Calculators } from './pages/CalculatorsIndex';
+import { PriceSkeleton } from './components/ui/PriceSkeleton';
 // If the file exists at src/Calculators.tsx, use this instead:
 // import Calculators from './Calculators';
 /* No additional code needed at $PLACEHOLDER$ */
 export default function App() {
-  const [currentPrice, setCurrentPrice] = useState(115055.31)
-  const [previousPrice, setPreviousPrice] = useState(115055.31)
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null)
+  const [previousPrice, setPreviousPrice] = useState<number | null>(null)
   const [volume, setVolume] = useState(0.12345)
   const [previousVolume, setPreviousVolume] = useState(0.12345)
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
   const wsRef = useRef<WebSocketWithMetadata | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const lastPriceRef = useRef<number>(currentPrice)
+  const lastPriceRef = useRef<number>(0)
   const lastVolumeRef = useRef<number>(volume)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const lastHeadlineRef = useRef<number>(0)
@@ -28,6 +30,10 @@ export default function App() {
   const [change10m, setChange10m] = useState(0)
   const lastTingUpRef = useRef<number>(0)
   const lastTingDownRef = useRef<number>(0)
+  // Reconnect/backoff helpers
+  const reconnectAttemptsRef = useRef<number>(0);
+  const RECONNECT_BASE_MS = 2000;
+  const MAX_RECONNECTS = 5;
   // Visit streak (gamification)
   const [streak, setStreak] = useState<number>(1)
   // Footer typing effect
@@ -59,6 +65,12 @@ export default function App() {
 
   // Flag to prevent sounds during cryptocurrency switches
   const [isSwitchingCrypto, setIsSwitchingCrypto] = useState(false)
+  // Loading UX: true while switching crypto or until first WS tick arrives
+  const [isLoading, setIsLoading] = useState(true)
+  const firstTickReceivedRef = useRef(false)
+  
+  // import safe formatters locally (use the util file)
+  // (import below to keep patch minimal - we add runtime imports via require-like import)
 
   // INDIVIDUAL WEBSOCKET CONNECTIONS - CONNECTION-ID DRIVEN (NO RACE CONDITIONS)
   const connectWebSocket = (symbol: SupportedCrypto) => {
@@ -91,11 +103,14 @@ export default function App() {
       const symbolLower = symbol.toLowerCase()
       // Use the ticker stream (aggregated) — more stable for price + volume
       const url = `wss://stream.binance.com:9443/ws/${symbolLower}usdt@ticker`
-      console.log(`🚀 Creating NEW WebSocket for ${symbol}/USDT -> ${url} (ID: ${connectionId})`)
+  console.log(`🚀 Creating NEW WebSocket for ${symbol}/USDT -> ${url} (ID: ${connectionId})`)
       const ws = new WebSocket(url) as WebSocketWithMetadata
       ws.connectionId = connectionId
       ws.symbol = symbol
       wsRef.current = ws
+  // mark loading until first message arrives for this connection
+  setIsLoading(true)
+  firstTickReceivedRef.current = false
       ws.onopen = () => {
         if (ws.connectionId !== connectionId) return
         console.log(`✅ WebSocket OPEN for ${symbol} (ID: ${connectionId})`)
@@ -112,6 +127,12 @@ export default function App() {
           const newPrice = parseFloat(data.c ?? data.p ?? NaN)
           const newVolume = parseFloat(data.v ?? data.q ?? 0)
           if (isNaN(newPrice)) return
+          // first valid tick -> clear loading state (but ensure we only do this once)
+          if (!firstTickReceivedRef.current) {
+            firstTickReceivedRef.current = true
+            // keep spinner for a tiny bit to avoid flicker
+            setTimeout(() => setIsLoading(false), 120)
+          }
           const oldPrice = lastPriceRef.current
           lastPriceRef.current = newPrice
           setPreviousPrice(oldPrice)
@@ -156,7 +177,7 @@ export default function App() {
   useEffect(() => {
     // Initial connection to multi-stream WebSocket
     console.log('🚀 Initial connection to multi-stream WebSocket')
-    setSelectedCrypto('BTC')
+  setSelectedCrypto('BTC')
     connectWebSocket('BTC')
     return () => {
       // Cleanup WebSocket on unmount
@@ -178,12 +199,13 @@ export default function App() {
         // Update selected crypto
     setSelectedCrypto(crypto)
 
-        // Reset state for new cryptocurrency
-    setCurrentPrice(0)
-    setPreviousPrice(0)
+    // Reset state for new cryptocurrency (use null so loaders show)
+  setCurrentPrice(null)
+  setPreviousPrice(null)
     setVolume(0)
     setChange10m(0)
     setLastUpdated(new Date())
+  setConnectionStatus('connecting')
 
         // Connect to new cryptocurrency - this will close old connection and open new one
     connectWebSocket(crypto)
@@ -286,66 +308,33 @@ export default function App() {
     }
   }
 
-  /* Added: safe formatter to avoid toFixed on null/undefined */
-  function formatPriceSafe(value?: number | null) {
-    if (value === null || value === undefined || !isFinite(value) || value <= 0) return "0.00";
-    return value.toFixed(2);
+  // Use central util to split price into parts. This ensures SOL (small prices) place integer in middle.
+  const currentParts = splitPriceParts(currentPrice ?? undefined)
+  const previousParts = splitPriceParts(previousPrice ?? undefined)
+  // Only show numeric blocks when we have a valid price and not loading
+  const hasValidPrice = !isLoading && currentPrice != null && isFinite(currentPrice) && currentPrice > 0
+  let displayParts = hasValidPrice ? { first: currentParts.left || '', middle: currentParts.middle || '', decimal: currentParts.right || '' } : { first: '', middle: '', decimal: '' }
+
+  // If left is empty (small price like SOL), swap to keep middle as main block and avoid an empty left block in the UI
+  if (displayParts.first === '' && displayParts.middle) {
+    // Render only middle + decimal; left remains hidden by using empty string
+    displayParts = { first: '', middle: displayParts.middle, decimal: displayParts.decimal }
   }
-
-  // Format price into segments based on crypto price range - SAFE (accepts null)
-  const formatPrice = (price?: number | null) => {
-    // defensive guard: never call toFixed on null/undefined
-    if (price == null || !isFinite(price) || price <= 0) {
-      return { first: '0', middle: '0', decimal: '.00' }
-    }
-    const priceStr = price.toFixed(2)
-    const parts = priceStr.split('.')
-    const integerPart = parts[0]
-    const decimalPart = `.${parts[1]}`
-
-    // For prices < 1000, use 2 blocks (e.g., SOL: 145.23 -> [145, .23])
-    if (price < 1000) {
-      const result = { first: integerPart, middle: decimalPart, decimal: '' }
-      console.log(`🔍 2-BLOCK FORMAT:`, result)
-      return result
-    }
-
-    // For prices >= 1000, use 3 blocks with proper splitting
-    if (integerPart.length <= 3) {
-      // 3 digits or less (e.g., 999 -> [999, 000, .00])
-      const result = { first: integerPart, middle: '000', decimal: decimalPart }
-      console.log(`🔍 3-BLOCK FORMAT (short):`, result)
-      return result
-    } else {
-      // More than 3 digits - split from right to left
-      const first = integerPart.slice(0, -3) || '0'  // Everything except last 3 digits
-      const middle = integerPart.slice(-3)            // Last 3 digits
-      const result = { first, middle, decimal: decimalPart }
-      console.log(`🔍 3-BLOCK FORMAT (long):`, result)
-      return result
-    }
-  }
-
-  const currentParts = formatPrice(currentPrice)
-  const previousParts = formatPrice(previousPrice)
-  // Only format price if it matches the selected cryptocurrency and is valid
-  const shouldFormatPrice = (currentPrice ?? 0) > 0 && !!selectedCrypto
-  const displayParts = shouldFormatPrice ? currentParts : { first: '0', middle: '0', decimal: '.00' }
 
   // Debug logging
   console.log(`Selected: ${selectedCrypto}, Price: ${currentPrice}, Parts:`, currentParts)
   console.log(`Display Parts:`, displayParts)
   console.log(`First: "${displayParts.first}", Middle: "${displayParts.middle}", Decimal: "${displayParts.decimal}"`)
 
-  // Show headline + audio ping when the first (thousands) block changes
+  // Show headline + audio ping when the main left/middle block changes
   useEffect(() => {
     // Guard against crypto switching and invalid price history
     if (isSwitchingCrypto) return
     if (!previousPrice || previousPrice <= 0) return
 
-    const firstNow = currentParts.first
-    const firstPrev = previousParts.first
-    if (firstNow === firstPrev) return
+    const firstNow = currentParts.left || currentParts.middle
+    const firstPrev = previousParts.left || previousParts.middle
+    if (!firstNow || !firstPrev || firstNow === firstPrev) return
     const nowTs = Date.now()
     if (nowTs - lastHeadlineRef.current < 1500) return
     lastHeadlineRef.current = nowTs
@@ -403,11 +392,18 @@ export default function App() {
     }, [value, previousValue])
 
     return (
-      <div
-        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16 h-[clamp(80px,18vw,120px)] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px]`}
+      <div 
+        className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] p-4 sm:p-6 md:p-8 lg:p-10`}
+        style={{ 
+          minHeight: '320px', // Match the skeleton height exactly
+          minWidth: '180px',  // Ensure minimum width
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
       >
-        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-nowrap min-h-[clamp(80px,18vw,120px)] sm:min-h-[120px] md:min-h-[140px] lg:min-h-[160px] xl:min-h-[180px] flex items-center justify-center">
-          <p className="block leading-[normal] whitespace-pre text-[clamp(60px,16vw,96px)] sm:text-[96px] md:text-[112px] lg:text-[128px] xl:text-[144px]">{value || '0'}</p>
+        <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[clamp(80px,18vw,112px)] sm:text-[112px] md:text-[128px] lg:text-[160px] xl:text-[192px] text-nowrap">
+          <p className="block leading-[normal] whitespace-pre">{value}</p>
         </div>
       </div>
     )
@@ -553,38 +549,60 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                   >
-                    {connectionStatus === 'connecting' ? (
-                      <>
-                        <div className="md:w-auto mr-2 sm:mr-3 md:mr-4 lg:mr-6">
-                          <div className="h-[clamp(80px,18vw,120px)] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px] bg-muted/60 border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] animate-pulse flex items-center justify-center p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-muted-foreground/20 rounded-full animate-pulse"></div>
-                          </div>
-                        </div>
-                        <div className="md:w-auto mr-2 sm:mr-3 md:mr-4 lg:mr-6">
-                          <div className="h-[clamp(80px,18vw,120px)] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px] bg-muted/60 border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] animate-pulse flex items-center justify-center p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-muted-foreground/20 rounded-full animate-pulse"></div>
-                          </div>
-                        </div>
-                        {(selectedCrypto === 'ETH' || selectedCrypto === 'BTC') && (
-                          <div className="md:w-auto">
-                            <div className="h-[clamp(80px,18vw,120px)] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px] bg-muted/60 border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] animate-pulse flex items-center justify-center p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16">
-                              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-muted-foreground/20 rounded-full animate-pulse"></div>
-                            </div>
-                          </div>
-                        )}
-                      </>
+                    {isLoading || !currentPrice ? (
+                      <PriceSkeleton 
+                        blocks={selectedCrypto === 'SOL' ? 2 : 3} 
+                        className="w-full price-container animate-fadeIn" 
+                      />
                     ) : (
+                      // Render actual price blocks - use only 2 blocks for SOL
                       <>
-                        <div className="md:w-auto mr-2 sm:mr-3 md:mr-4 lg:mr-6"><PriceBlock value={displayParts.first} previousValue={previousParts.first} /></div>
-                        <div className="md:w-auto mr-2 sm:mr-3 md:mr-4 lg:mr-6"><PriceBlock value={displayParts.middle} previousValue={previousParts.middle} /></div>
-                        {displayParts.decimal && (
-                          <div className="md:w-auto"><PriceBlock value={displayParts.decimal} previousValue={previousParts.decimal} /></div>
+                        {/* For SOL (small integer), use 2-block layout */}
+                        {selectedCrypto === 'SOL' || (!currentParts.left && currentParts.middle) ? (
+                          <>
+                            {/* Middle (integer) block */}
+                            <div className="md:w-auto">
+                              <PriceBlock 
+                                value={currentParts.middle} 
+                                previousValue={previousParts.middle} 
+                              />
+                            </div>
+                            {/* Decimal block */}
+                            <div className="md:w-auto">
+                              <PriceBlock 
+                                value={currentParts.right} 
+                                previousValue={previousParts.right} 
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          // For BTC/ETH (large numbers), use 3-block layout
+                          <>
+                            <div className="md:w-auto">
+                              <PriceBlock 
+                                value={currentParts.left} 
+                                previousValue={previousParts.left} 
+                              />
+                            </div>
+                            <div className="md:w-auto">
+                              <PriceBlock 
+                                value={currentParts.middle} 
+                                previousValue={previousParts.middle} 
+                              />
+                            </div>
+                            <div className="md:w-auto">
+                              <PriceBlock 
+                                value={currentParts.right} 
+                                previousValue={previousParts.right} 
+                              />
+                            </div>
+                          </>
                         )}
                       </>
                     )}
                     <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none">
                       <span className={change10m >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-                        {change10m >= 0 ? '+' : ''}{change10m.toFixed(2)}% in 24h
+                        {change10m >= 0 ? '+' : ''}{isFinite(change10m) ? change10m.toFixed(2) : '0.00'}% in 24h
                       </span>
                     </div>
                   </motion.div>
@@ -643,8 +661,8 @@ export default function App() {
                   Live Data
                 </div>
                 <div className="text-[10px] sm:text-xs text-muted-foreground space-y-1">
-                  <div>Volume: {volume.toFixed(6)} {selectedCrypto}</div>
-                  <div>Change: {change10m.toFixed(4)}%</div>
+                  <div>Volume: {isFinite(volume) ? volume.toFixed(6) : '0.000000'} {selectedCrypto}</div>
+                  <div>Change: {isFinite(change10m) ? change10m.toFixed(4) : '0.0000'}%</div>
                   <div>Source: {selectedCrypto}/USDT WebSocket</div>
                   <div>Last Updated: {Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000))}s ago</div>
                 </div>
@@ -657,7 +675,7 @@ export default function App() {
             </button>
           </div>
         } />
-        <Route path="/calculators" element={<Calculators />} />
+  <Route path="/calculators" element={<Calculators onCalculatorClick={(slug) => navigate(`/calculators/${slug}`)} onHomeClick={() => navigate('/')} />} />
       </Routes>
     </BrowserRouter>
   )

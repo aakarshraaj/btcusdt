@@ -18,7 +18,7 @@ export function CalculatorsIndex({ onCalculatorClick, onHomeClick }: Calculators
                 onClick={onHomeClick}
                 className="text-2xl font-bold text-foreground hover:text-accent-foreground transition-colors"
               >
-                BTC Tracker
+                BTCUSDT.live
               </button>
               <nav className="text-sm text-muted-foreground">
                 <button onClick={onHomeClick} className="hover:text-foreground">Home</button>
@@ -37,7 +37,7 @@ export function CalculatorsIndex({ onCalculatorClick, onHomeClick }: Calculators
             Crypto Calculators
           </h1>
           <p className="text-lg text-muted-foreground">
-            Essential tools for calculating profits, planning investments, and analyzing returns.
+            Free crypto profit calculator, mining calculator, and dollar cost averaging tools with BTCUSDT live price data.
           </p>
         </div>
         

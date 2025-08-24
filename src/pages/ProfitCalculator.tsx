@@ -156,7 +156,7 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
   return (
     <CalculatorLayout
       title="Crypto Profit Calculator"
-      description="Estimate how much profit or loss you made on a crypto trade. Enter your buy price, sell price, and investment amount."
+      description="Free crypto profit calculator with BTCUSDT live price. Calculate cryptocurrency profit and ROI for any trade with our cryptoprofitcalculator."
       onHomeClick={onHomeClick}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -268,8 +268,8 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
               {buyPrice && investmentAmount && (
                 <div className="mt-1 text-xs text-muted-foreground">
                   {investmentType === 'usd' 
-                    ? `≈ ${(parseFloat(investmentAmount) / parseFloat(buyPrice)).toFixed(6)} coins`
-                    : `≈ $${(parseFloat(investmentAmount) * parseFloat(buyPrice)).toFixed(2)} USD`
+                    ? `≈ ${isFinite(parseFloat(buyPrice)) && parseFloat(buyPrice) > 0 ? (parseFloat(investmentAmount) / parseFloat(buyPrice)).toFixed(6) : '0.000000'} coins`
+                    : `≈ ${isFinite(parseFloat(buyPrice)) ? formatCurrency(parseFloat(investmentAmount) * parseFloat(buyPrice)) : '$0.00'} USD`
                   }
                 </div>
               )}
@@ -373,7 +373,7 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
                   {results.profitUSD >= 0 ? '+' : ''}{formatCurrency(results.profitUSD)}
                 </div>
                 <div className={`text-lg ${results.profitPercentage >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {results.profitPercentage >= 0 ? '+' : ''}{results.profitPercentage.toFixed(2)}%
+                  {results.profitPercentage >= 0 ? '+' : ''}{isFinite(results.profitPercentage) ? results.profitPercentage.toFixed(2) : '0.00'}%
                 </div>
               </div>
 

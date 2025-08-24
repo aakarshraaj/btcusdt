@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useCrypto } from '../context/CryptoContext';
+import { formatPriceSafe } from '../utils/formatPrice';
 
 interface MiniTickerProps {
   onTickerClick?: () => void;
@@ -17,8 +18,8 @@ export function MiniTicker({ onTickerClick }: MiniTickerProps) {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatPrice = (price?: number | null) => {
+    return `$${formatPriceSafe(price ?? undefined as any)}`;
   };
 
   const getCryptoSymbol = () => {
@@ -30,7 +31,7 @@ export function MiniTicker({ onTickerClick }: MiniTickerProps) {
     }
   };
 
-  const priceChange = previousPrice > 0 ? ((currentPrice - previousPrice) / previousPrice) * 100 : 0;
+  const priceChange = previousPrice && previousPrice > 0 && currentPrice != null ? ((currentPrice - previousPrice) / previousPrice) * 100 : 0;
   const isPositive = priceChange >= 0;
 
   return (
@@ -51,7 +52,7 @@ export function MiniTicker({ onTickerClick }: MiniTickerProps) {
             {formatPrice(currentPrice)}
           </div>
           <div className={`text-xs ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
+            {isPositive ? '+' : ''}{isFinite(priceChange) ? priceChange.toFixed(2) : '0.00'}%
           </div>
         </div>
       </div>

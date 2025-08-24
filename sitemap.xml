@@ -11,13 +11,25 @@
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/</loc>
+    <loc>https://www.btcusdt.live/calculators/profit</loc>
     <lastmod>2023-10-06T12:00:00Z</lastmod>
     <changefreq>daily</changefreq>
-    <priority>1.00</priority>
+    <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators</loc>
+    <loc>https://www.btcusdt.live/calculators/mining</loc>
+    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://www.btcusdt.live/calculators/dca</loc>
+    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://www.btcusdt.live/calculators/staking</loc>
     <lastmod>2023-10-06T12:00:00Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>

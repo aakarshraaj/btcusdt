@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import { useCrypto } from './context/CryptoContext'
+import { formatPriceSafe, splitPriceParts } from "./utils/formatPrice"
+import { PriceSkeleton } from './components/ui/PriceSkeleton'
 
 export default function App() {
   const navigate = useNavigate()
@@ -204,26 +206,11 @@ export default function App() {
     }
   }
 
-  /* Added safe formatter to avoid calling toFixed on null/undefined */
-  function formatPriceSafe(value?: number | null) {
-    if (value === null || value === undefined || !isFinite(value) || value <= 0) return "0.00";
-    return value.toFixed(2);
-  }
- 
-  // Format price into segments with dynamic slicing for correct thousands separator
-  const formatPrice = (price?: number | null) => {
-    if (price == null || !isFinite(price) || price <= 0) return { first: '0', middle: '0', decimal: '.00' }
-    const priceStr = price.toFixed(2)
-    const [intPart, decPart = '00'] = priceStr.split('.')
-    if (price < 1000) return { first: intPart, middle: `.${decPart}`, decimal: '' }
-    if (intPart.length <= 3) return { first: intPart, middle: '000', decimal: `.${decPart}` }
-    const first = intPart.slice(0, -3) || '0'
-    const middle = intPart.slice(-3)
-    return { first, middle, decimal: `.${decPart}` }
-  }
-
-  const currentParts = formatPrice(currentPrice)
-  const previousParts = formatPrice(previousPrice)
+  // Use shared split util to avoid empty left blocks and unsafe formatting
+  const currentPartsRaw = splitPriceParts(currentPrice ?? undefined)
+  const previousPartsRaw = splitPriceParts(previousPrice ?? undefined)
+  const currentParts = { first: currentPartsRaw.left || '', middle: currentPartsRaw.middle, decimal: currentPartsRaw.right }
+  const previousParts = { first: previousPartsRaw.left || '', middle: previousPartsRaw.middle, decimal: previousPartsRaw.right }
 
   // Show headline + audio ping when the first (thousands) block changes
   useEffect(() => {
@@ -249,6 +236,9 @@ export default function App() {
     return () => clearTimeout(t)
   }, [currentPrice, previousPrice, isSwitchingCrypto])
 
+  // Respect provider's loading state and avoid rendering partial blocks when loading
+  const { isLoading } = useCrypto()
+
   const getStatusColor = () => {
     switch (connectionStatus) {
       case 'connected': return 'bg-green-500'
@@ -258,6 +248,7 @@ export default function App() {
     }
   }
 
+  // Update the PriceBlock component to use more stable sizing
   const PriceBlock = ({ value, previousValue }: { value: string, previousValue: string }) => {
     const [bgColor, setBgColor] = useState('bg-muted')
     
@@ -291,6 +282,13 @@ export default function App() {
     return (
       <div 
         className={`${bgColor} box-border inline-flex items-center justify-center relative shrink-0 transition-colors duration-500 ease-out border border-border rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] p-4 sm:p-6 md:p-8 lg:p-10`}
+        style={{ 
+          minHeight: '320px', // Match the doubled skeleton height
+          minWidth: '180px',  // Ensure minimum width
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
       >
         <div className="font-['Space Grotesk',_sans-serif] font-bold leading-[0] relative shrink-0 text-foreground text-[clamp(80px,18vw,112px)] sm:text-[112px] md:text-[128px] lg:text-[160px] xl:text-[192px] text-nowrap">
           <p className="block leading-[normal] whitespace-pre">{value}</p>
@@ -390,14 +388,28 @@ export default function App() {
 
             {/* Blocks row + change label */}
             <div className="relative inline-flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 md:items-start md:justify-start lg:-ml-6 w-full sm:w-auto">
-              <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
-              {currentParts.middle && (
-                <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+              {(!currentPrice || isLoading) ? (
+                // Loading / small-price skeletons with larger height to reduce flicker
+                <PriceSkeleton blocks={selectedCrypto === 'SOL' ? 2 : 3} className="price-container animate-fadeIn" />
+              ) : (
+                // For SOL: Use 2-block layout (no empty left block)
+                selectedCrypto === 'SOL' ? (
+                  <>
+                    <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+                    <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+                  </>
+                ) : (
+                  // For BTC/ETH: Use 3-block layout
+                  <>
+                    <div className="md:w-auto"><PriceBlock value={currentParts.first} previousValue={previousParts.first} /></div>
+                    <div className="md:w-auto"><PriceBlock value={currentParts.middle} previousValue={previousParts.middle} /></div>
+                    <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
+                  </>
+                )
               )}
-              <div className="md:w-auto"><PriceBlock value={currentParts.decimal} previousValue={previousParts.decimal} /></div>
               <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none">
                 <span className={change10m >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-                  {change10m >= 0 ? '+' : ''}{change10m.toFixed(2)}% in 10 mins
+                  {change10m >= 0 ? '+' : ''}{isFinite(change10m) ? change10m.toFixed(2) : '0.00'}% in 10 mins
                 </span>
               </div>
             </div>
@@ -455,8 +467,8 @@ export default function App() {
           Live Data
         </div>
         <div className="text-[10px] sm:text-xs text-muted-foreground space-y-1">
-          <div>Volume: {volume.toFixed(6)} BTC</div>
-          <div>Change: {((currentPrice - previousPrice) / previousPrice * 100).toFixed(4)}%</div>
+          <div>Volume: {isFinite(volume) ? volume.toFixed(6) : '0.000000'} BTC</div>
+          <div>Change: {(previousPrice && previousPrice > 0 && currentPrice != null) ? (((currentPrice - previousPrice) / previousPrice * 100).toFixed(4)) : '0.0000'}%</div>
           <div>Source: Binance WebSocket</div>
         </div>
       </motion.div>

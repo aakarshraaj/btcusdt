@@ -9,7 +9,7 @@ export function MiningCalculator({ onHomeClick, onCalculatorClick }: MiningCalcu
   return (
     <CalculatorLayout
       title="Mining Profitability Calculator"
-      description="Calculate potential profits from cryptocurrency mining operations."
+      description="Calculate potential profits from cryptocurrency mining operations with our mining calculator. Compatible with NiceHash and all mining hardware."
       onHomeClick={onHomeClick}
     >
       <div className="bg-card rounded-xl border border-border p-8 text-center">
@@ -18,7 +18,7 @@ export function MiningCalculator({ onHomeClick, onCalculatorClick }: MiningCalcu
           Coming Soon
         </h2>
         <p className="text-muted-foreground mb-6">
-          This calculator is currently under development. It will help you calculate mining profitability.
+          This mining calculator is currently under development. It will help you calculate mining profitability, hashrate returns, and electricity costs for Bitcoin and other cryptocurrencies. Compatible with NiceHash and other mining pools.
         </p>
         <button
           onClick={() => onCalculatorClick('profit')}
