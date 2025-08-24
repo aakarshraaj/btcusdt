@@ -204,7 +204,7 @@ export default function App() {
     }
   }
 
-  /* Added: safe formatter to avoid toFixed on null/undefined */
+  /* Added safe formatter to avoid calling toFixed on null/undefined */
   function formatPriceSafe(value?: number | null) {
     if (value === null || value === undefined || !isFinite(value) || value <= 0) return "0.00";
     return value.toFixed(2);
