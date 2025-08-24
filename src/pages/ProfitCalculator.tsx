@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { CalculatorLayout } from '../components/CalculatorLayout';
 import {
@@ -122,6 +122,20 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
       coins
     });
   };
+
+  // Auto-calculate when key values change
+  useEffect(() => {
+    const buy = parseFloat(buyPrice);
+    const sell = parseFloat(sellPrice);
+    const amount = parseFloat(investmentAmount);
+    
+    if (buy && sell && amount && buy > 0 && sell > 0 && amount > 0) {
+      calculateProfit();
+    } else {
+      // Clear results if inputs are invalid
+      setResults(null);
+    }
+  }, [buyPrice, sellPrice, investmentAmount, investmentType, fees, feeMode]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -251,6 +265,14 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
                 placeholder={investmentType === 'usd' ? 'Enter USD amount...' : 'Enter coin quantity...'}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              {buyPrice && investmentAmount && (
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {investmentType === 'usd' 
+                    ? `≈ ${(parseFloat(investmentAmount) / parseFloat(buyPrice)).toFixed(6)} coins`
+                    : `≈ $${(parseFloat(investmentAmount) * parseFloat(buyPrice)).toFixed(2)} USD`
+                  }
+                </div>
+              )}
             </div>
 
             <div>
@@ -325,8 +347,12 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Calculate Profit
+              Recalculate
             </motion.button>
+            
+            <div className="text-xs text-muted-foreground text-center">
+              Results update automatically as you type
+            </div>
           </div>
         </div>
 
