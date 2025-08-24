@@ -3,44 +3,56 @@ import { useCrypto } from "../context/CryptoContext";
 
 /**
  * 3-block PriceDisplay (stable height, no flicker)
- * - left / middle / right blocks (right = decimal)
- * - when integer < 1000 we show a small placeholder in the left block and the integer in the middle block
- * - loader covers the whole block and cross-fades into the price
+ * - Always: left=placeholder or leading digits, middle=integer or last-3, right=decimal
+ * - Ensures middle block is never empty (where main digits always display)
+ * - Shows visible loader on coin switch with shimmer animation
  */
 export default function PriceDisplay() {
   const { currentPrice, selectedCrypto, isLoading } = useCrypto();
 
-  const TRANS_MS = 360;
+  const TRANS_MS = 450; // increased for better visibility
 
+  // Updated logic: always puts numbers in middle for SOL and small cryptos
   const splitPrice = (n?: number | null) => {
-    if (n == null || !isFinite(n)) return { left: "", middle: "", right: "" };
+    if (n == null || !isFinite(n)) return { left: "", middle: "0", right: ".00" };
+
     const s = n.toFixed(2);
     const [intPart, decPart = "00"] = s.split(".");
-    if (intPart.length > 3) {
-      return {
-        left: intPart.slice(0, -3),
-        middle: intPart.slice(-3),
-        right: `.${decPart}`,
-      };
+
+    // SOL (small price): keep integer in MIDDLE block, left has placeholder
+    if (intPart.length <= 3) {
+      return { left: "", middle: intPart, right: `.${decPart}` };
     }
-    // integer <= 3 digits: keep left placeholder, integer in middle
-    return { left: "", middle: intPart, right: `.${decPart}` };
+
+    // BTC/ETH (larger prices): traditional 3-block split with last 3 in middle
+    return {
+      left: intPart.slice(0, -3),
+      middle: intPart.slice(-3),
+      right: `.${decPart}`,
+    };
   };
 
   const parts = splitPrice(currentPrice);
 
-  // Helper: show placeholder dot when left is empty (keeps three-block visual)
-  const LeftPlaceholder = () => (
-    <div
-      aria-hidden
-      style={{
-        width: 22,
-        height: 22,
-        borderRadius: 999,
-        background: "rgba(255,255,255,0.14)",
-      }}
-    />
-  );
+  // Always show placeholder in left for small numbers (like SOL)
+  const LeftContent = () => {
+    if (parts.left) {
+      return <div style={{ fontSize: 72, fontWeight: 800 }}>{parts.left}</div>;
+    }
+    return (
+      <div aria-hidden className="relative flex items-center justify-center">
+        {/* Placeholder dot or circle for left block when empty */}
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.14)",
+          }}
+        />
+      </div>
+    );
+  };
 
   return (
     <div
@@ -60,22 +72,39 @@ export default function PriceDisplay() {
           transform: "translateZ(0)",
         }}
       >
-        {/* Loader overlay */}
+        {/* Loader overlay - ENHANCED visibility */}
         <div
           aria-hidden={!isLoading}
           aria-busy={isLoading}
           role="status"
           className="absolute inset-0 rounded-2xl overflow-hidden"
           style={{
-            transition: `opacity ${TRANS_MS}ms ease`,
+            transition: `opacity ${TRANS_MS}ms ease-out`,
             opacity: isLoading ? 1 : 0,
             pointerEvents: isLoading ? "auto" : "none",
           }}
         >
+          {/* Enhanced shimmer animation */}
           <div
-            className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 animate-pulse"
-            style={{ backgroundSize: "200% 100%" }}
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.05) 40%)",
+              backgroundSize: "200% 100%",
+              animation: "shimmer 1.6s infinite linear",
+            }}
           />
+          <style jsx>{`
+            @keyframes shimmer {
+              0% {
+                background-position: 0% 0;
+              }
+              100% {
+                background-position: 200% 0;
+              }
+            }
+          `}</style>
+
           <div
             style={{
               height: 140,
@@ -84,24 +113,45 @@ export default function PriceDisplay() {
               justifyContent: "space-between",
               gap: 16,
               padding: "0 32px",
-              zIndex: 2,
               position: "relative",
+              zIndex: 2,
             }}
           >
-            <div style={{ flex: 1, height: 92, borderRadius: 20, background: "rgba(255,255,255,0.06)" }} />
-            <div style={{ flex: 0.7, height: 92, borderRadius: 20, background: "rgba(255,255,255,0.06)" }} />
-            <div style={{ flex: 0.45, height: 92, borderRadius: 20, background: "rgba(255,255,255,0.06)" }} />
+            <div
+              style={{
+                flex: 1,
+                height: 92,
+                borderRadius: 20,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            />
+            <div
+              style={{
+                flex: 0.7,
+                height: 92,
+                borderRadius: 20,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            />
+            <div
+              style={{
+                flex: 0.45,
+                height: 92,
+                borderRadius: 20,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            />
           </div>
         </div>
 
-        {/* Price content (cross-fades in) */}
+        {/* Price content */}
         <div
           aria-hidden={isLoading}
-          className="absolute inset-0 flex items-center justify-center rounded-2xl"
+          className="absolute inset-0 flex items-center justify-center"
           style={{
-            transition: `opacity ${TRANS_MS}ms ease, transform ${TRANS_MS}ms ease`,
+            transition: `opacity ${TRANS_MS}ms ease-out, transform ${TRANS_MS}ms ease-out`,
             opacity: isLoading ? 0 : 1,
-            transform: isLoading ? "translateY(6px)" : "translateY(0)",
+            transform: isLoading ? "translateY(8px)" : "translateY(0)",
             pointerEvents: isLoading ? "none" : "auto",
           }}
         >
@@ -115,58 +165,54 @@ export default function PriceDisplay() {
               padding: "0 32px",
             }}
           >
-            {/* Left block: placeholder when no leading group */}
+            {/* Left block - now either shows leading digits OR placeholder (never empty) */}
             <div
               style={{
                 flex: 1,
                 minHeight: 92,
                 borderRadius: 20,
-                background: "var(--card-bg, rgba(255,255,255,0.04))",
+                background: "var(--card-bg, #1a1a1a)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 color: "var(--text, #fff)",
               }}
             >
-              {parts.left ? (
-                <div style={{ fontSize: 72, fontWeight: 800 }}>{parts.left}</div>
-              ) : (
-                <LeftPlaceholder />
-              )}
+              <LeftContent />
             </div>
 
-            {/* Middle block: when integer <=3 it's shown here; otherwise shows last 3 digits */}
+            {/* Middle block - ALWAYS shows integer (for SOL) or last-3 (for BTC/ETH) */}
             <div
               style={{
                 flex: 0.7,
                 minHeight: 92,
                 borderRadius: 20,
-                background: "var(--card-bg, rgba(255,255,255,0.02))",
+                background: "var(--card-bg, #1a1a1a)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 color: "var(--text, #fff)",
               }}
             >
-              <div style={{ fontSize: parts.left ? 72 : 72, fontWeight: 800 }}>
-                {parts.middle || ""}
-              </div>
+              <div style={{ fontSize: 72, fontWeight: 800 }}>{parts.middle}</div>
             </div>
 
-            {/* Right (decimal) block */}
+            {/* Right block - decimal */}
             <div
               style={{
                 flex: 0.45,
                 minHeight: 92,
                 borderRadius: 20,
-                background: "var(--accent-bg, rgba(255,255,255,0.02))",
+                background: "var(--accent-bg, #8B0000)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 color: "var(--text, #fff)",
               }}
             >
-              <div style={{ fontSize: 56, fontWeight: 800, opacity: 0.95 }}>{parts.right}</div>
+              <div style={{ fontSize: 56, fontWeight: 800, opacity: 0.95 }}>
+                {parts.right}
+              </div>
             </div>
           </div>
         </div>

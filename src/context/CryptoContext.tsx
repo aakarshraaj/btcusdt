@@ -39,7 +39,7 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
   // loading state + minimum visible duration to avoid flicker
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const loadingStartedRef = useRef<number | null>(null);
-  const MIN_LOADING_MS = 300; // minimum loader show time for smooth UX
+  const MIN_LOADING_MS = 600; // INCREASED from 300ms for better visibility
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
