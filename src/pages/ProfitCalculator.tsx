@@ -20,14 +20,15 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
   const [sellPrice, setSellPrice] = useState<string>('');
   const [investmentAmount, setInvestmentAmount] = useState<string>('');
   const [investmentType, setInvestmentType] = useState<'usd' | 'coins'>('usd');
-  const [fees, setFees] = useState<string>('0');
+  const [fees, setFees] = useState<string>('0.1');
+  const [feeMode, setFeeMode] = useState<'sell' | 'buy' | 'both'>('sell');
   const [results, setResults] = useState<Results | null>(null);
 
   const calculateProfit = () => {
     const buy = parseFloat(buyPrice);
     const sell = parseFloat(sellPrice);
     const amount = parseFloat(investmentAmount);
-    const feePercent = parseFloat(fees) / 100;
+    const feePercent = parseFloat(fees || '0') / 100;
 
     if (!buy || !sell || !amount || buy <= 0 || sell <= 0 || amount <= 0) {
       return;
@@ -49,8 +50,16 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
       totalSell = coins * sell;
     }
 
-    // Calculate fees
-    const totalFees = (totalBuy + totalSell) * feePercent;
+    // Calculate fees based on selected mode
+    let totalFees = 0;
+    if (feeMode === 'sell') {
+      totalFees = totalSell * feePercent;
+    } else if (feeMode === 'buy') {
+      totalFees = totalBuy * feePercent;
+    } else if (feeMode === 'both') {
+      totalFees = (totalBuy + totalSell) * feePercent;
+    }
+
     const profitUSD = totalSell - totalBuy - totalFees;
     const profitPercentage = (profitUSD / totalBuy) * 100;
 
@@ -162,12 +171,62 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
                 type="number"
                 value={fees}
                 onChange={(e) => setFees(e.target.value)}
-                placeholder="0"
+                placeholder="0.1"
                 min="0"
                 max="100"
                 step="0.1"
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Apply Fees To
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="fee-sell"
+                    name="feeMode"
+                    value="sell"
+                    checked={feeMode === 'sell'}
+                    onChange={(e) => setFeeMode(e.target.value as 'sell' | 'buy' | 'both')}
+                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary focus:ring-2"
+                  />
+                  <label htmlFor="fee-sell" className="ml-2 text-sm text-foreground">
+                    Sell Only (default)
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="fee-buy"
+                    name="feeMode"
+                    value="buy"
+                    checked={feeMode === 'buy'}
+                    onChange={(e) => setFeeMode(e.target.value as 'sell' | 'buy' | 'both')}
+                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary focus:ring-2"
+                  />
+                  <label htmlFor="fee-buy" className="ml-2 text-sm text-foreground">
+                    Buy Only
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="fee-both"
+                    name="feeMode"
+                    value="both"
+                    checked={feeMode === 'both'}
+                    onChange={(e) => setFeeMode(e.target.value as 'sell' | 'buy' | 'both')}
+                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary focus:ring-2"
+                  />
+                  <label htmlFor="fee-both" className="ml-2 text-sm text-foreground">
+                    Both Buy & Sell
+                  </label>
+                </div>
+              </div>
             </div>
 
             <motion.button
