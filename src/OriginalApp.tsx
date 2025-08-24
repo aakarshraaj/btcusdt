@@ -30,20 +30,32 @@ export default function App() {
   const footerLinkText = 'Aakarsh'
   const [footerTypedCount, setFooterTypedCount] = useState(0)
   const [footerDim, setFooterDim] = useState(false)
+  
+  // Multi-crypto support
+  const SUPPORTED_CRYPTOS = ['BTC', 'ETH', 'SOL'] as const
+  type SupportedCrypto = typeof SUPPORTED_CRYPTOS[number]
+  const [selectedCrypto, setSelectedCrypto] = useState<SupportedCrypto>('BTC')
+  
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
     if (saved === 'light' || saved === 'dark') return saved
     return 'light'
   })
 
-  // WebSocket connection logic
-  const connectWebSocket = () => {
+  // WebSocket connection logic with crypto support
+  const connectWebSocket = (crypto: SupportedCrypto = selectedCrypto) => {
     try {
-      const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade')
+      // Close existing connection
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+
+      const symbolLower = crypto.toLowerCase()
+      const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbolLower}usdt@trade`)
       wsRef.current = ws
 
       ws.onopen = () => {
-        console.log('Connected to Binance WebSocket')
+        console.log(`Connected to Binance WebSocket for ${crypto}/USDT`)
         setConnectionStatus('connected')
       }
 
@@ -64,7 +76,7 @@ export default function App() {
           lastPriceRef.current = newPrice
           lastVolumeRef.current = newVolume
 
-          // Update history for 5m change
+          // Update history for 10m change
           const now = Date.now()
           priceHistoryRef.current.push({ ts: now, price: newPrice })
           const tenMinAgo = now - 10 * 60 * 1000
@@ -91,12 +103,12 @@ export default function App() {
       }
 
       ws.onclose = () => {
-        console.log('WebSocket connection closed')
+        console.log(`WebSocket connection closed for ${crypto}`)
         setConnectionStatus('disconnected')
         
         reconnectTimeoutRef.current = setTimeout(() => {
           setConnectionStatus('connecting')
-          connectWebSocket()
+          connectWebSocket(crypto)
         }, 3000)
       }
 
@@ -110,8 +122,26 @@ export default function App() {
     }
   }
 
+  // Function to switch cryptocurrencies
+  const switchCrypto = (crypto: SupportedCrypto) => {
+    console.log(`Switching to ${crypto}`)
+    setSelectedCrypto(crypto)
+    
+    // Reset price data when switching
+    setPreviousPrice(0)
+    setCurrentPrice(0)
+    setVolume(0)
+    setChange10m(0)
+    
+    // Clear price history
+    priceHistoryRef.current = []
+    
+    // Connect to new crypto WebSocket
+    connectWebSocket(crypto)
+  }
+
   useEffect(() => {
-    connectWebSocket()
+    connectWebSocket(selectedCrypto)
 
     return () => {
       if (wsRef.current) {
@@ -121,7 +151,7 @@ export default function App() {
         clearTimeout(reconnectTimeoutRef.current)
       }
     }
-  }, [])
+  }, [selectedCrypto])  // Re-connect when crypto changes
 
   // Streak logic (daily visits)
   useEffect(() => {
@@ -314,7 +344,7 @@ export default function App() {
           </div>
         </motion.div>
       )}
-      {/* Top bar: Theme + Status + Calculators */}
+      {/* Top bar: Theme + Calculators on the right */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
         {/* Calculators button */}
         <motion.button
@@ -340,11 +370,34 @@ export default function App() {
             {theme === 'dark' ? '🌙' : '☀️'}
           </span>
         </button>
+      </div>
 
+      {/* Connection status moved to top-left */}
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 z-10">
         <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
         <span className="text-xs sm:text-sm text-muted-foreground capitalize font-['Space Grotesk',_sans-serif]">
           {connectionStatus}
         </span>
+      </div>
+
+      {/* Crypto Switcher in the center top */}
+      <div className="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="inline-flex items-center gap-1 bg-black/85 text-white rounded-xl p-1 shadow-lg border border-white/10">
+          {SUPPORTED_CRYPTOS.map((crypto) => (
+            <button
+              key={crypto}
+              onClick={() => switchCrypto(crypto)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                selectedCrypto === crypto
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-white hover:bg-white/10'
+              }`}
+              aria-pressed={selectedCrypto === crypto}
+            >
+              {crypto}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
@@ -354,12 +407,14 @@ export default function App() {
             <div className="flex items-start gap-4 sm:gap-6 self-start md:self-start lg:-ml-6">
               <div className="inline-flex items-center gap-3 bg-muted rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] border border-border px-4 py-3 sm:px-5 sm:py-4 w-fit md:mt-1 origin-left">
                 <div className="size-10 sm:size-12 md:size-14 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
-                  <span className="text-[16px] sm:text-[18px] md:text-[20px] leading-none">₿</span>
+                  <span className="text-[16px] sm:text-[18px] md:text-[20px] leading-none">
+                    {selectedCrypto === 'BTC' ? '₿' : selectedCrypto === 'ETH' ? 'Ξ' : '◎'}
+                  </span>
                 </div>
                 <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[28px] md:text-[32px] leading-none">$</div>
               </div>
               <div className="mt-0.5 self-start flex flex-col justify-between whitespace-nowrap h-12 sm:h-14 md:h-16">
-                <div className="font-bold text-foreground leading-none tracking-[0.02em] text-[30px] sm:text-[36px] md:text-[40px]">BTC</div>
+                <div className="font-bold text-foreground leading-none tracking-[0.02em] text-[30px] sm:text-[36px] md:text-[40px]">{selectedCrypto}</div>
                 <div className="text-muted-foreground leading-none text-[18px] sm:text-[20px] md:text-[24px]">USDT</div>
               </div>
             </div>
