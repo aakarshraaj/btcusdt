@@ -9,6 +9,7 @@ interface CryptoContextType {
   previousPrice: number;
   selectedCrypto: SupportedCrypto;
   connectionStatus: 'connecting' | 'connected' | 'disconnected';
+  isSwitchingCrypto: boolean;
   setSelectedCrypto: (crypto: SupportedCrypto) => void;
 }
 
@@ -133,6 +134,7 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
         previousPrice,
         selectedCrypto,
         connectionStatus,
+        isSwitchingCrypto,
         setSelectedCrypto: handleSetSelectedCrypto,
       }}
     >

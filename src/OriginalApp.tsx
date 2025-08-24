@@ -7,7 +7,7 @@ export default function App() {
   const navigate = useNavigate()
   
   // Use shared crypto context instead of local state
-  const { currentPrice, previousPrice, selectedCrypto, connectionStatus, setSelectedCrypto } = useCrypto()
+  const { currentPrice, previousPrice, selectedCrypto, connectionStatus, isSwitchingCrypto, setSelectedCrypto } = useCrypto()
   
   const [volume, setVolume] = useState(0.12345)
   const [previousVolume, setPreviousVolume] = useState(0.12345)
@@ -34,7 +34,6 @@ export default function App() {
   // Multi-crypto support
   const SUPPORTED_CRYPTOS = ['BTC', 'ETH', 'SOL'] as const
   type SupportedCrypto = typeof SUPPORTED_CRYPTOS[number]
-  const [isSwitchingCrypto, setIsSwitchingCrypto] = useState(false)
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
@@ -42,12 +41,8 @@ export default function App() {
     return 'light'
   })
 
-  // Function to switch cryptocurrencies
+  // Function to switch cryptocurrencies with local state reset
   const switchCrypto = (crypto: SupportedCrypto) => {
-    console.log(`Switching to ${crypto}`)
-    setIsSwitchingCrypto(true)
-    setSelectedCrypto(crypto)
-    
     // Reset local volume data when switching
     setVolume(0)
     setChange10m(0)
@@ -62,10 +57,8 @@ export default function App() {
     lastTingDownRef.current = 0
     lastHeadlineRef.current = 0
     
-    // Clear switching state after a delay to allow data to stabilize
-    setTimeout(() => {
-      setIsSwitchingCrypto(false)
-    }, 2000)
+    // Use context's switching function which handles WebSocket and state management
+    setSelectedCrypto(crypto)
   }
 
   // Effect to update local refs when price changes from context
@@ -419,7 +412,7 @@ export default function App() {
 
             {/* Streak badge */}
             {streak > 1 && (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-accent/60 text-accent-foreground border border-border px-3 py-1 text-xs font-['Space Grotesk',_sans-serif]">
+              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-accent/60 text-accent-foreground border border-border px-3 py-1 text-base font-['Space Grotesk',_sans-serif]">
                 <span>🔥</span>
                 <span>
                   You’ve checked BTC price {streak} {streak === 1 ? 'day' : 'days'} in a row! <span className="opacity-70">Keep the streak alive.</span>
