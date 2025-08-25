@@ -1,0 +1,35 @@
+{
+  "name": "Bitcoin Price Tracker - Live BTC, ETH, SOL Prices",
+  "short_name": "BTC Tracker",
+  "description": "Real-time cryptocurrency price tracker for Bitcoin, Ethereum, and Solana with professional analysis tools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/favicon-light.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-dark.svg", 
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calculators",
+      "short_name": "Calculators",
+      "description": "Access crypto profit calculators",
+      "url": "/calculators",
+      "icons": [{ "src": "/favicon-light.svg", "sizes": "any" }]
+    }
+  ]
+}
