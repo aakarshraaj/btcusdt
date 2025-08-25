@@ -3,10 +3,12 @@ import ReactDOM from 'react-dom/client'
 import AppRouter from './AppRouter'
 import '../styles/globals.css'
 import { usePerformanceMonitoring } from './hooks/usePerformance'
+import { useAccessibility } from './hooks/useAccessibility'
 
-// Performance monitoring wrapper
+// Performance monitoring and accessibility wrapper
 function App() {
   usePerformanceMonitoring();
+  useAccessibility();
   return <AppRouter />;
 }
 

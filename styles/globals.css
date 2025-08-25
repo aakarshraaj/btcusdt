@@ -282,4 +282,74 @@ html {
     will-change: opacity;
     transform: translateZ(0);
   }
+  
+  /* High contrast mode support */
+  .high-contrast {
+    --background: #000000;
+    --foreground: #ffffff;
+    --border: #ffffff;
+    --muted: #333333;
+    --accent: #ffff00;
+  }
+  
+  /* Keyboard navigation styling */
+  .keyboard-navigation *:focus {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+  }
+  
+  /* Enhanced focus styles for better visibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.1);
+  }
+  
+  /* Skip link styling */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #005fcc;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+    transition: top 0.3s;
+  }
+  
+  .skip-link:focus {
+    top: 6px;
+  }
+  
+  /* Improve text readability */
+  @media (prefers-contrast: high) {
+    * {
+      text-shadow: none;
+      box-shadow: none;
+    }
+    
+    button, 
+    .bg-muted,
+    .bg-card {
+      border: 2px solid currentColor;
+    }
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

@@ -315,28 +315,37 @@ export default function App() {
           className="fixed top-8 inset-x-0 z-20 flex justify-center pointer-events-none"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
+          role="alert"
+          aria-live="assertive"
         >
           <div className="px-4 py-2 rounded-full bg-black/80 text-white text-xs tracking-widest uppercase shadow-sm border border-white/10">
             {headlineText}
           </div>
         </motion.div>
       )}
-      {/* Top bar: Theme + Calculators on the right */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10">
+      
+      {/* Skip link for accessibility */}
+      <a href="#main-price-display" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50">
+        Skip to price display
+      </a>
+      
+      {/* Top navigation bar */}
+      <nav className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 sm:gap-3 z-10" role="navigation" aria-label="Main navigation">
         {/* Calculators button */}
         <motion.button
           onClick={() => navigate('/calculators')}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          aria-label="Access cryptocurrency calculators"
         >
           Calculators
         </motion.button>
 
         {/* Theme switcher (modern toggle) */}
         <button
-          aria-label="Toggle theme"
-          title="Toggle theme"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="relative inline-flex w-14 h-7 items-center rounded-full bg-muted/80 text-foreground border border-border shadow-sm cursor-pointer transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/40"
         >
@@ -347,18 +356,18 @@ export default function App() {
             {theme === 'dark' ? '🌙' : '☀️'}
           </span>
         </button>
-      </div>
+      </nav>
 
-      {/* Connection status moved to top-left */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 z-10">
-        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
+      {/* Connection status indicator */}
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 z-10" role="status" aria-label="WebSocket connection status">
+        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} aria-hidden="true"></div>
         <span className="text-xs sm:text-sm text-muted-foreground capitalize font-['Space Grotesk',_sans-serif]">
           {connectionStatus}
         </span>
       </div>
 
-      {/* Crypto Switcher in the center top */}
-      <div className={`absolute top-3 z-10 ${isMobile ? 'left-3' : 'left-1/2'} ${isMobile ? '' : 'transform -translate-x-1/2'}`}>
+      {/* Cryptocurrency selector */}
+      <div className={`absolute top-3 z-10 ${isMobile ? 'left-3' : 'left-1/2'} ${isMobile ? '' : 'transform -translate-x-1/2'}`} role="group" aria-label="Select cryptocurrency">
         <div className="inline-flex items-center gap-1 bg-black/85 text-white rounded-xl p-1 shadow-lg border border-white/10">
           {SUPPORTED_CRYPTOS.map((crypto) => (
             <button
@@ -377,27 +386,33 @@ export default function App() {
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center relative size-full min-h-screen">
+      {/* Main content area */}
+      <main className="flex flex-col items-center justify-center relative size-full min-h-screen" id="main-price-display">
+        {/* Hidden heading for screen readers */}
+        <h1 className="sr-only">Live {selectedCrypto} Price Tracker - Real-time cryptocurrency prices</h1>
+        
         <div className="w-full max-w-[560px] md:max-w-[1100px] px-5 sm:px-6 md:px-8 py-12 sm:py-16 md:py-0 flex md:h-screen md:items-center md:justify-center mx-auto">
           <div className="flex flex-col gap-4 items-start md:items-start w-full">
-            {/* Pair and currency pill inline, centered with blocks on desktop */}
-            <div className="flex items-start gap-4 sm:gap-6 self-start md:self-start lg:-ml-6">
+            {/* Cryptocurrency pair display */}
+            <section className="flex items-start gap-4 sm:gap-6 self-start md:self-start lg:-ml-6" aria-labelledby="crypto-pair">
+              <h2 id="crypto-pair" className="sr-only">{selectedCrypto} to USDT pair</h2>
               <div className="inline-flex items-center gap-3 bg-muted rounded-[28px] sm:rounded-[32px] lg:rounded-[44px] border border-border px-4 py-3 sm:px-5 sm:py-4 w-fit md:mt-1 origin-left">
-                <div className="size-10 sm:size-12 md:size-14 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+                <div className="size-10 sm:size-12 md:size-14 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-sm" aria-hidden="true">
                   <span className="text-[16px] sm:text-[18px] md:text-[20px] leading-none">
                     {selectedCrypto === 'BTC' ? '₿' : selectedCrypto === 'ETH' ? 'Ξ' : '◎'}
                   </span>
                 </div>
-                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[28px] md:text-[32px] leading-none">$</div>
+                <div className="font-['Space Grotesk',_sans-serif] text-foreground text-[28px] sm:text-[28px] md:text-[32px] leading-none" aria-hidden="true">$</div>
               </div>
               <div className="mt-0.5 self-start flex flex-col justify-between whitespace-nowrap h-12 sm:h-14 md:h-16">
                 <div className="font-bold text-foreground leading-none tracking-[0.02em] text-[30px] sm:text-[36px] md:text-[40px]">{selectedCrypto}</div>
                 <div className="text-muted-foreground leading-none text-[18px] sm:text-[20px] md:text-[24px]">USDT</div>
               </div>
-            </div>
+            </section>
 
-            {/* Blocks row + change label */}
-            <div className="relative inline-flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 md:items-start md:justify-start lg:-ml-6 w-full sm:w-auto">
+            {/* Live price display */}
+            <section className="relative inline-flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 md:items-start md:justify-start lg:-ml-6 w-full sm:w-auto" aria-labelledby="live-price">
+              <h2 id="live-price" className="sr-only">Current {selectedCrypto} price: ${formatPriceSafe(currentPrice)}</h2>
               {(!currentPrice || isLoading) ? (
                 // Loading / small-price skeletons with larger height to reduce flicker
                 <PriceSkeleton blocks={selectedCrypto === 'SOL' ? 2 : 3} className="price-container animate-fadeIn" />
@@ -417,28 +432,28 @@ export default function App() {
                   </>
                 )
               )}
-              <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none">
+              <div className="hidden md:block absolute -bottom-6 right-2 text-sm font-['Space Grotesk',_sans-serif] pointer-events-none" role="status" aria-label={`10 minute change: ${change10m >= 0 ? 'up' : 'down'} ${Math.abs(change10m).toFixed(2)} percent`}>
                 <span className={change10m >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
                   {change10m >= 0 ? '+' : ''}{isFinite(change10m) ? change10m.toFixed(2) : '0.00'}% in 10 mins
                 </span>
               </div>
-            </div>
+            </section>
 
-            {/* Streak badge */}
+            {/* Streak achievement notification */}
             {streak > 1 && (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-accent/60 text-accent-foreground border border-border px-3 py-1 text-base font-['Space Grotesk',_sans-serif]">
-                <span>🔥</span>
+              <aside className="mt-2 inline-flex items-center gap-2 rounded-xl bg-accent/60 text-accent-foreground border border-border px-3 py-1 text-base font-['Space Grotesk',_sans-serif]" role="status" aria-label="Visit streak achievement">
+                <span role="img" aria-label="Fire emoji">🔥</span>
                 <span>
                   You’ve checked BTC price {streak} {streak === 1 ? 'day' : 'days'} in a row! <span className="opacity-70">Keep the streak alive.</span>
                 </span>
-              </div>
+              </aside>
             )}
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Bottom-right: LinkedIn link */}
-      {/* Bottom-right: Typewriter footer */}
+      {/* Footer with creator attribution */}
+      <footer>
       <motion.div 
         className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+12px)] sm:bottom-6 sm:right-6 z-20 text-muted-foreground"
         initial={{ opacity: 0, y: 12 }}
@@ -465,23 +480,38 @@ export default function App() {
           )}
         </div>
       </motion.div>
+      </footer>
 
-      {/* Additional Info Panel */}
-      <motion.div 
+      {/* Live market data sidebar */}
+      <aside 
         className="relative inline-flex flex-col w-fit max-w-[90vw] mx-4 mt-6 mb-[calc(env(safe-area-inset-bottom)+72px)] sm:mx-0 sm:mt-0 sm:mb-0 sm:fixed sm:left-8 sm:right-auto sm:bottom-8 bg-card rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 border border-border sm:max-w-[360px]"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
+        role="complementary"
+        aria-labelledby="market-data-heading"
       >
-        <div className="font-bold text-xs sm:text-sm mb-1.5 sm:mb-2">
-          Live Data
-        </div>
-        <div className="text-[10px] sm:text-xs text-muted-foreground space-y-1">
-          <div>Volume: {isFinite(volume) ? volume.toFixed(6) : '0.000000'} BTC</div>
-          <div>Change: {(previousPrice && previousPrice > 0 && currentPrice != null) ? (((currentPrice - previousPrice) / previousPrice * 100).toFixed(4)) : '0.0000'}%</div>
-          <div>Source: Binance WebSocket</div>
-        </div>
-      </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <h3 id="market-data-heading" className="font-bold text-xs sm:text-sm mb-1.5 sm:mb-2">
+            Live Data
+          </h3>
+          <dl className="text-[10px] sm:text-xs text-muted-foreground space-y-1">
+            <div>
+              <dt className="sr-only">Trading volume</dt>
+              <dd>Volume: {isFinite(volume) ? volume.toFixed(6) : '0.000000'} BTC</dd>
+            </div>
+            <div>
+              <dt className="sr-only">Price change percentage</dt>
+              <dd>Change: {(previousPrice && previousPrice > 0 && currentPrice != null) ? (((currentPrice - previousPrice) / previousPrice * 100).toFixed(4)) : '0.0000'}%</dd>
+            </div>
+            <div>
+              <dt className="sr-only">Data source</dt>
+              <dd>Source: Binance WebSocket</dd>
+            </div>
+          </dl>
+        </motion.div>
+      </aside>
     </div>
   )
 }

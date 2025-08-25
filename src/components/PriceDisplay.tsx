@@ -3,9 +3,11 @@ import { useCrypto } from "../context/CryptoContext";
 import { splitPriceParts } from "../utils/formatPrice";
 
 /**
- * Fixed PriceDisplay that directly solves:
+ * Enhanced PriceDisplay with accessibility and performance optimizations:
  * 1. Empty block with SOL - adapts UI to 2-block for small integers
  * 2. Forces visible loader when switching coins
+ * 3. Accessible price announcements for screen readers
+ * 4. Semantic HTML structure with proper roles
  */
 export default function PriceDisplay() {
   const { currentPrice, selectedCrypto, isLoading } = useCrypto();
@@ -18,8 +20,19 @@ export default function PriceDisplay() {
   const partsRaw = splitPriceParts(currentPrice ?? undefined)
   const parts = partsRaw.left ? { twoBlocks: false, left: partsRaw.left, middle: partsRaw.middle, right: partsRaw.right } : { twoBlocks: true, left: partsRaw.middle, right: partsRaw.right }
 
+  // Announce price changes to screen readers
+  useEffect(() => {
+    if (currentPrice && !isLoading) {
+      const announcement = `${selectedCrypto} price updated to $${currentPrice}`;
+      const liveRegion = document.getElementById('price-live-region');
+      if (liveRegion) {
+        liveRegion.textContent = announcement;
+      }
+    }
+  }, [currentPrice, selectedCrypto, isLoading]);
+
   return (
-    <div 
+    <section 
       className="mx-auto relative"
       style={{ 
         minHeight: 180, 
@@ -30,7 +43,17 @@ export default function PriceDisplay() {
         width: "fit-content",
         maxWidth: "90vw",
       }}
+      role="main"
+      aria-label={`${selectedCrypto} price display`}
     >
+      {/* Live region for screen reader announcements */}
+      <div 
+        id="price-live-region"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      />
+      
       {/* LOADER - renders on top with fade transition */}
       {isLoading && (
         <div
@@ -38,6 +61,8 @@ export default function PriceDisplay() {
           style={{
             animation: "fadeIn 0.3s ease-out forwards"
           }}
+          role="status"
+          aria-label="Loading price data"
         >
           <div 
             className="flex items-center justify-center gap-4"
@@ -163,6 +188,6 @@ export default function PriceDisplay() {
       >
         {selectedCrypto} / USDT
       </div>
-    </div>
+    </section>
   );
 }
