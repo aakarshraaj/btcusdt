@@ -1,6 +1,8 @@
 /**
- * Mock price data generator for when external APIs are not accessible
- * Simulates realistic cryptocurrency price movements
+ * DISABLED: Mock price data generator 
+ * This file is kept for reference but mock data is disabled per requirements.
+ * The application should never fall back to mock data and should stay in loading
+ * state forever if Binance connection fails.
  */
 
 export interface MockPriceData {
@@ -60,49 +62,12 @@ export class MockPriceProvider {
 
   /**
    * Start providing mock data for a cryptocurrency
+   * DISABLED: No mock data should be used per requirements
    */
   subscribe(symbol: string, callback: (data: MockPriceData) => void): void {
-    console.log(`🎭 Starting mock data for ${symbol}`);
-    
-    // Store the callback
-    this.listeners.set(symbol, callback);
-    
-    // Clear any existing interval
-    if (this.intervals.has(symbol)) {
-      clearInterval(this.intervals.get(symbol));
-    }
-    
-    // Send initial data immediately
-    callback({
-      symbol,
-      price: this.prices[symbol as keyof typeof BASE_PRICES] || BASE_PRICES.BTC,
-      volume: this.volumes[symbol] || 50000,
-      change24h: this.changes[symbol] || 0
-    });
-    
-    // Set up interval for continuous updates (every 1-3 seconds for realism)
-    const interval = setInterval(() => {
-      if (symbol in BASE_PRICES) {
-        const newPrice = this.generatePriceMovement(symbol as keyof typeof BASE_PRICES);
-        this.prices[symbol] = newPrice;
-        
-        // Update volume slightly
-        this.volumes[symbol] = this.volumes[symbol] * (0.998 + Math.random() * 0.004);
-        
-        // Update 24h change
-        const basePrice = BASE_PRICES[symbol as keyof typeof BASE_PRICES];
-        this.changes[symbol] = ((newPrice - basePrice) / basePrice) * 100;
-        
-        callback({
-          symbol,
-          price: newPrice,
-          volume: this.volumes[symbol],
-          change24h: this.changes[symbol]
-        });
-      }
-    }, 1000 + Math.random() * 2000); // Random interval between 1-3 seconds
-    
-    this.intervals.set(symbol, interval);
+    console.warn(`🚫 Mock data is disabled. Application should not fall back to mock data for ${symbol}`);
+    // Do nothing - mock data is disabled
+    return;
   }
 
   /**

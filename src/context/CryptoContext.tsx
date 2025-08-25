@@ -6,7 +6,6 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { mockPriceProvider } from "../utils/mockPriceData";
 
 // Multi-crypto support
 const SUPPORTED_CRYPTOS = ["BTC", "ETH", "SOL"] as const;
@@ -127,18 +126,10 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
       (ws as any).connectionId = connectionId;
       (ws as any).symbol = crypto;
 
-      // Set a longer timeout before falling back to mock data (5 minutes instead of 10 seconds)
-      const fallbackTimeout = setTimeout(() => {
-        if (ws.readyState !== WebSocket.OPEN) {
-          console.log(`⚠️ WebSocket connection failed for ${crypto} after 5 minutes, falling back to mock data`);
-          ws.close();
-          startMockDataConnection(crypto);
-        }
-      }, 300000); // 5 minute timeout - much longer to keep trying real data
+      // No fallback to mock data - keep retrying indefinitely
 
       ws.onopen = () => {
         if ((ws as any).connectionId !== connectionId) return;
-        clearTimeout(fallbackTimeout);
         retryCountRef.current = 0; // Reset retry count on successful connection
         console.log(`✅ WebSocket connected for ${crypto}`);
         setConnectionStatus("connected");
@@ -146,7 +137,6 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
 
       ws.onmessage = (event) => {
         if ((ws as any).connectionId !== connectionId) return;
-        clearTimeout(fallbackTimeout);
 
         try {
           const data = JSON.parse(event.data);
@@ -174,61 +164,35 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
 
       ws.onclose = (ev) => {
         if ((ws as any).connectionId !== connectionId) return;
-        clearTimeout(fallbackTimeout);
         
-        // Try to reconnect up to MAX_RETRIES times, then keep retrying with longer intervals
-        if (retryCountRef.current < MAX_RETRIES) {
-          retryCountRef.current++;
+        // Keep retrying indefinitely with exponential backoff
+        retryCountRef.current++;
+        
+        if (retryCountRef.current <= MAX_RETRIES) {
           console.warn(`🔌 WebSocket closed for ${crypto}, attempting retry ${retryCountRef.current}/${MAX_RETRIES}`);
           setConnectionStatus("connecting"); // Show connecting status while retrying
           setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS * retryCountRef.current);
         } else {
-          console.warn(`🔌 WebSocket closed for ${crypto} after ${MAX_RETRIES} quick retries, continuing with slower retries...`);
-          // Continue retrying with exponential backoff (up to 60 seconds)
+          console.warn(`🔌 WebSocket closed for ${crypto}, continuing with exponential backoff retries...`);
+          // Continue retrying indefinitely with exponential backoff (cap at 60 seconds)
           const backoffMs = Math.min(60000, RECONNECT_BASE_MS * Math.pow(2, retryCountRef.current - MAX_RETRIES));
           setConnectionStatus("connecting"); // Keep showing connecting status
           setTimeout(() => connectWebSocket(crypto), backoffMs);
-          retryCountRef.current++;
         }
       };
 
       ws.onerror = (error) => {
         if ((ws as any).connectionId !== connectionId) return;
-        clearTimeout(fallbackTimeout);
         console.error("WebSocket error:", error);
         
-        // Don't immediately fall back to mock data on error - let onclose handle it
+        // Let onclose handle the retry logic
       };
     } catch (error) {
       console.error("Error creating WebSocket:", error);
       setConnectionStatus("connecting"); // Show connecting status and let retry logic handle it
-      // Don't immediately fall back to mock data - let the retry logic handle it
+      // Retry after base delay
       setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS);
     }
-  };
-
-  // Start mock data connection when WebSocket fails (as last resort)
-  const startMockDataConnection = (crypto: SupportedCrypto) => {
-    console.log(`🎭 Starting mock data connection for ${crypto} (fallback mode)`);
-    setConnectionStatus("disconnected"); // Show disconnected status to indicate this is not real data
-    
-    // Stop any existing mock subscriptions
-    mockPriceProvider.cleanup();
-    
-    // Start mock data
-    mockPriceProvider.subscribe(crypto, (data) => {
-      if (!firstTickReceivedRef.current) {
-        firstTickReceivedRef.current = true;
-        stopLoadingSafely();
-        setPreviousPrice(lastPriceRef.current || null);
-      }
-
-      const oldPrice = lastPriceRef.current || 0;
-      lastPriceRef.current = data.price;
-
-      setPreviousPrice(oldPrice || null);
-      setCurrentPrice(data.price);
-    });
   };
 
   // Function to switch cryptocurrencies
@@ -258,9 +222,6 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
       clearTimeout(safetyTimeoutRef.current);
       safetyTimeoutRef.current = null;
     }
-    
-    // Stop any existing mock data
-    mockPriceProvider.cleanup();
 
     setTimeout(() => {
       setIsSwitchingCrypto(false);
@@ -284,8 +245,6 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
-      // Clean up mock data provider
-      mockPriceProvider.cleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCrypto]);
