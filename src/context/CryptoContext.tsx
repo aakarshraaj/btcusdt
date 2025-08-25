@@ -49,8 +49,71 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
   const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef<number>(0);
   const MAX_RETRIES = 3;
+  const restFallbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const RECONNECT_BASE_MS = 2000;
+  const REST_POLL_INTERVAL = 5000; // Poll every 5 seconds when using REST fallback
+
+  // REST API fallback function
+  const fetchPriceViaREST = async (crypto: SupportedCrypto): Promise<number | null> => {
+    try {
+      const symbol = `${crypto}USDT`;
+      const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const price = parseFloat(data.price);
+      
+      if (isNaN(price) || price <= 0) {
+        throw new Error('Invalid price data received');
+      }
+      
+      return price;
+    } catch (error) {
+      console.error(`Failed to fetch ${crypto} price via REST API:`, error);
+      return null;
+    }
+  };
+
+  // Start REST API polling fallback
+  const startRESTFallback = (crypto: SupportedCrypto) => {
+    console.log(`🔄 Starting REST API fallback for ${crypto}`);
+    setConnectionStatus("connected"); // Show as connected since we have a fallback
+    
+    const pollPrice = async () => {
+      const price = await fetchPriceViaREST(crypto);
+      if (price !== null) {
+        if (!firstTickReceivedRef.current) {
+          firstTickReceivedRef.current = true;
+          stopLoadingSafely();
+          setPreviousPrice(lastPriceRef.current || null);
+        }
+
+        const oldPrice = lastPriceRef.current || 0;
+        lastPriceRef.current = price;
+
+        setPreviousPrice(oldPrice || null);
+        setCurrentPrice(price);
+      }
+    };
+
+    // Initial fetch
+    pollPrice();
+    
+    // Set up polling interval
+    restFallbackIntervalRef.current = setInterval(pollPrice, REST_POLL_INTERVAL);
+  };
+
+  // Clear REST fallback polling
+  const clearRESTFallback = () => {
+    if (restFallbackIntervalRef.current) {
+      clearInterval(restFallbackIntervalRef.current);
+      restFallbackIntervalRef.current = null;
+    }
+  };
 
   const startLoading = () => {
     // avoid resetting start time if already loading
@@ -88,6 +151,9 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
   const connectWebSocket = (crypto: SupportedCrypto = selectedCrypto) => {
     try {
       startLoading();
+
+      // Clear any existing REST fallback
+      clearRESTFallback();
 
       // Clear any existing safety timeout
       if (safetyTimeoutRef.current) {
@@ -131,6 +197,7 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
       ws.onopen = () => {
         if ((ws as any).connectionId !== connectionId) return;
         retryCountRef.current = 0; // Reset retry count on successful connection
+        clearRESTFallback(); // Clear any REST fallback since WebSocket is working
         console.log(`✅ WebSocket connected for ${crypto}`);
         setConnectionStatus("connected");
       };
@@ -173,11 +240,9 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
           setConnectionStatus("connecting"); // Show connecting status while retrying
           setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS * retryCountRef.current);
         } else {
-          console.warn(`🔌 WebSocket closed for ${crypto}, continuing with exponential backoff retries...`);
-          // Continue retrying indefinitely with exponential backoff (cap at 60 seconds)
-          const backoffMs = Math.min(60000, RECONNECT_BASE_MS * Math.pow(2, retryCountRef.current - MAX_RETRIES));
-          setConnectionStatus("connecting"); // Keep showing connecting status
-          setTimeout(() => connectWebSocket(crypto), backoffMs);
+          console.warn(`🔌 WebSocket failed after ${MAX_RETRIES} attempts, switching to REST API fallback for ${crypto}`);
+          // Switch to REST API fallback after max retries
+          startRESTFallback(crypto);
         }
       };
 
@@ -189,9 +254,9 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
       };
     } catch (error) {
       console.error("Error creating WebSocket:", error);
-      setConnectionStatus("connecting"); // Show connecting status and let retry logic handle it
-      // Retry after base delay
-      setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS);
+      console.warn(`Failed to create WebSocket for ${crypto}, switching to REST API fallback`);
+      // Switch to REST fallback immediately if WebSocket creation fails
+      startRESTFallback(crypto);
     }
   };
 
@@ -199,6 +264,9 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
   const handleSetSelectedCrypto = (crypto: SupportedCrypto) => {
     console.log(`⚠️ SWITCHING TO ${crypto} - forcing loading state`);
     setIsSwitchingCrypto(true);
+
+    // Clear any existing REST fallback
+    clearRESTFallback();
 
     // FORCE loading state - defensive approach
     setIsLoading(true);
@@ -245,6 +313,7 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
+      clearRESTFallback(); // Clear REST fallback polling
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCrypto]);
