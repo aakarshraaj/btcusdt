@@ -171,7 +171,7 @@ export default function App() {
     }
   }, [])
 
-  // Apply theme to <html>
+  // Apply theme to <html> and update favicon
   useEffect(() => {
     const root = document.documentElement
     if (theme === 'dark') {
@@ -180,6 +180,12 @@ export default function App() {
       root.classList.remove('dark')
     }
     localStorage.setItem('theme', theme)
+    
+    // Update favicon based on theme
+    const faviconLink = document.getElementById('favicon-fallback') as HTMLLinkElement
+    if (faviconLink) {
+      faviconLink.href = theme === 'dark' ? '/favicon-dark.svg' : '/favicon-light.svg'
+    }
   }, [theme])
 
   // Play a short ping using Web Audio (no external asset required)
