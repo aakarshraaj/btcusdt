@@ -1,37 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.btcusdt.live/</loc>
+    <loc>https://btc-testground.vercel.app/</loc>
     <changefreq>hourly</changefreq>
     <priority>1.00</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators</loc>
+    <loc>https://btc-testground.vercel.app/calculators</loc>
     <changefreq>daily</changefreq>
-    <priority>0.80</priority>
+    <priority>0.90</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators/profit</loc>
-    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <loc>https://btc-testground.vercel.app/calculators/profit</loc>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators/mining</loc>
-    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <loc>https://btc-testground.vercel.app/calculators/dca</loc>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators/dca</loc>
-    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <loc>https://btc-testground.vercel.app/calculators/staking</loc>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
   <url>
-    <loc>https://www.btcusdt.live/calculators/staking</loc>
-    <lastmod>2023-10-06T12:00:00Z</lastmod>
+    <loc>https://btc-testground.vercel.app/calculators/mining</loc>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
+    <lastmod>2024-08-25T00:00:00Z</lastmod>
   </url>
 </urlset>
