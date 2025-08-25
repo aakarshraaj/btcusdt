@@ -213,3 +213,19 @@ html {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 0.4; }
 }
+
+/* Global cursor pointer styles for interactive elements */
+@layer utilities {
+  button,
+  [role="button"],
+  a,
+  label,
+  select,
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    cursor: not-allowed;
+  }
+}

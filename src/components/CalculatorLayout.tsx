@@ -6,9 +6,10 @@ interface CalculatorLayoutProps {
   description: string;
   children: ReactNode;
   onHomeClick: () => void;
+  onCalculatorClick?: () => void;
 }
 
-export function CalculatorLayout({ title, description, children, onHomeClick }: CalculatorLayoutProps) {
+export function CalculatorLayout({ title, description, children, onHomeClick, onCalculatorClick }: CalculatorLayoutProps) {
   return (
     <div className="bg-background text-foreground min-h-screen">
       {/* Header */}
@@ -23,9 +24,13 @@ export function CalculatorLayout({ title, description, children, onHomeClick }: 
                 BTC Tracker
               </button>
               <nav className="text-sm text-muted-foreground">
-                <button onClick={onHomeClick} className="hover:text-foreground">Home</button>
+                <button onClick={onHomeClick} className="hover:text-foreground cursor-pointer">Home</button>
                 <span className="mx-2">›</span>
-                <span>Calculators</span>
+                {onCalculatorClick ? (
+                  <button onClick={onCalculatorClick} className="hover:text-foreground cursor-pointer">Calculators</button>
+                ) : (
+                  <span>Calculators</span>
+                )}
                 <span className="mx-2">›</span>
                 <span className="text-foreground">{title}</span>
               </nav>
