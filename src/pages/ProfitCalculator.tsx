@@ -11,7 +11,8 @@ import {
 
 interface ProfitCalculatorProps {
   onHomeClick: () => void;
-  onCalculatorClick: (slug: string) => void;
+  onCalculatorClick: () => void;
+  onNavigateToCalculator?: (slug: string) => void;
 }
 
 interface Results {
@@ -35,7 +36,7 @@ const CRYPTO_PAIRS: CryptoPair[] = [
   { symbol: 'ADAUSDT', display: 'ADA/USDT', name: 'Cardano' },
 ];
 
-export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalculatorProps) {
+export function ProfitCalculator({ onHomeClick, onCalculatorClick, onNavigateToCalculator }: ProfitCalculatorProps) {
   const [buyPrice, setBuyPrice] = useState<string>('');
   const [sellPrice, setSellPrice] = useState<string>('');
   const [investmentAmount, setInvestmentAmount] = useState<string>('');
@@ -158,6 +159,7 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
       title="Crypto Profit Calculator"
       description="Free crypto profit calculator with BTCUSDT live price. Calculate cryptocurrency profit and ROI for any trade with our cryptoprofitcalculator."
       onHomeClick={onHomeClick}
+      onCalculatorClick={onCalculatorClick}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Input Form */}
@@ -418,8 +420,8 @@ export function ProfitCalculator({ onHomeClick, onCalculatorClick }: ProfitCalcu
           Try our Dollar Cost Averaging Calculator to plan recurring investments over time.
         </p>
         <button
-          onClick={() => onCalculatorClick('dca')}
-          className="bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 transition-colors"
+          onClick={() => onNavigateToCalculator?.('dca')}
+          className="bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 transition-colors cursor-pointer"
         >
           Dollar Cost Averaging Calculator
         </button>

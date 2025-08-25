@@ -2,15 +2,17 @@ import { CalculatorLayout } from '../components/CalculatorLayout';
 
 interface StakingCalculatorProps {
   onHomeClick: () => void;
-  onCalculatorClick: (slug: string) => void;
+  onCalculatorClick: () => void;
+  onNavigateToCalculator?: (slug: string) => void;
 }
 
-export function StakingCalculator({ onHomeClick, onCalculatorClick }: StakingCalculatorProps) {
+export function StakingCalculator({ onHomeClick, onCalculatorClick, onNavigateToCalculator }: StakingCalculatorProps) {
   return (
     <CalculatorLayout
       title="Staking Rewards Calculator"
       description="Estimate potential returns from staking your cryptocurrency assets."
       onHomeClick={onHomeClick}
+      onCalculatorClick={onCalculatorClick}
     >
       <div className="bg-card rounded-xl border border-border p-8 text-center">
         <div className="text-6xl mb-4">🔒</div>
@@ -21,8 +23,8 @@ export function StakingCalculator({ onHomeClick, onCalculatorClick }: StakingCal
           This calculator is currently under development. It will help you estimate staking rewards.
         </p>
         <button
-          onClick={() => onCalculatorClick('profit')}
-          className="bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 transition-colors"
+          onClick={() => onNavigateToCalculator?.('profit')}
+          className="bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 transition-colors cursor-pointer"
         >
           Try Profit Calculator Instead
         </button>

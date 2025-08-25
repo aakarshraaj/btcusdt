@@ -41,7 +41,8 @@ function ProfitCalculatorPage() {
   return (
     <ProfitCalculator
       onHomeClick={() => navigate('/')}
-      onCalculatorClick={(slug) => navigate(`/calculators/${slug}`)}
+      onCalculatorClick={() => navigate('/calculators')}
+      onNavigateToCalculator={(slug) => navigate(`/calculators/${slug}`)}
     />
   );
 }
@@ -52,7 +53,8 @@ function DCACalculatorPage() {
   return (
     <DCACalculator
       onHomeClick={() => navigate('/')}
-      onCalculatorClick={(slug) => navigate(`/calculators/${slug}`)}
+      onCalculatorClick={() => navigate('/calculators')}
+      onNavigateToCalculator={(slug) => navigate(`/calculators/${slug}`)}
     />
   );
 }
@@ -63,7 +65,8 @@ function StakingCalculatorPage() {
   return (
     <StakingCalculator
       onHomeClick={() => navigate('/')}
-      onCalculatorClick={(slug) => navigate(`/calculators/${slug}`)}
+      onCalculatorClick={() => navigate('/calculators')}
+      onNavigateToCalculator={(slug) => navigate(`/calculators/${slug}`)}
     />
   );
 }
@@ -74,7 +77,8 @@ function MiningCalculatorPage() {
   return (
     <MiningCalculator
       onHomeClick={() => navigate('/')}
-      onCalculatorClick={(slug) => navigate(`/calculators/${slug}`)}
+      onCalculatorClick={() => navigate('/calculators')}
+      onNavigateToCalculator={(slug) => navigate(`/calculators/${slug}`)}
     />
   );
 }
