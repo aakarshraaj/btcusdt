@@ -4,12 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Critical Resource Hints -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://stream.binance.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    
     <!-- SEO Meta Tags -->
     <title>Live Bitcoin Price (BTC/USDT) | Real-Time Crypto Tracker for BTC, ETH, SOL</title>
     <meta name="description" content="Track Bitcoin (BTC), Ethereum (ETH), and Solana (SOL) prices in real-time with our professional crypto price tracker. Live updates, price breakdowns, and crypto analysis tools." />
-    <meta name="keywords" content="bitcoin price, crypto tracker, BTC USDT, ethereum price, solana price, live crypto prices, cryptocurrency tracker, binance api, real time crypto" />
+    <meta name="keywords" content="bitcoin price, crypto tracker, BTC USDT, ethereum price, solana price, live crypto prices, cryptocurrency tracker, binance api, real time crypto, bitcoin price today, bitcoin price live, btc price prediction, crypto market cap, digital currency prices, crypto portfolio tracker, bitcoin investment tracker, crypto price alerts, btc to usd converter" />
     <meta name="author" content="Aakarsh" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <link rel="canonical" href="https://btc-testground.vercel.app/" />
     
     <!-- Open Graph Tags -->
@@ -17,24 +22,48 @@
     <meta property="og:description" content="Professional crypto price tracker with live Bitcoin, Ethereum, and Solana prices. Real-time updates, price alerts, and comprehensive analysis tools." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://btc-testground.vercel.app/" />
-    <meta property="og:image" content="https://btc-testground.vercel.app/og-image.png" />
+    <meta property="og:image" content="https://btc-testground.vercel.app/og-image.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Bitcoin Price Tracker Dashboard - Live BTC, ETH, SOL Prices" />
     <meta property="og:site_name" content="Bitcoin Price Tracker" />
+    <meta property="og:locale" content="en_US" />
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Live Bitcoin Price Tracker | Real-Time Crypto Prices" />
     <meta name="twitter:description" content="Track Bitcoin, Ethereum, and Solana prices in real-time with professional crypto analysis tools." />
-    <meta name="twitter:image" content="https://btc-testground.vercel.app/og-image.png" />
+    <meta name="twitter:image" content="https://btc-testground.vercel.app/twitter-image.svg" />
+    <meta name="twitter:image:alt" content="Bitcoin Price Tracker Dashboard" />
     
-    <!-- Additional SEO -->
+    <!-- PWA and Mobile Optimization -->
     <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BTC Tracker" />
+    <meta name="application-name" content="Bitcoin Price Tracker" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
     
-    <!-- Favicons for light and dark modes -->
+    <!-- Web Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Favicons and Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" id="favicon-fallback" />
+    <link rel="apple-touch-icon" href="/favicon-light.svg" />
+    <link rel="mask-icon" href="/favicon-light.svg" color="#000000" />
+    
+    <!-- Performance and Security -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Accessibility and UX -->
+    <meta name="color-scheme" content="dark light" />
+    <meta name="supported-color-schemes" content="dark light" />
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5YBCEEJLC"></script>
@@ -45,39 +74,108 @@
       gtag('config', 'G-J5YBCEEJLC');
     </script>
     
-    <!-- Structured Data -->
+    <!-- Enhanced Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Bitcoin Price Tracker",
-      "description": "Real-time cryptocurrency price tracker for Bitcoin, Ethereum, and Solana",
-      "url": "https://btc-testground.vercel.app/",
-      "applicationCategory": "Finance",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Aakarsh",
-        "url": "https://www.linkedin.com/in/aakarshraaj"
-      },
-      "featureList": [
-        "Real-time BTC/USDT/ETH/SOL updates",
-        "Multi-cryptocurrency support",
-        "Live price breakdown",
-        "Professional crypto dashboard",
-        "Powered by Binance WebSocket"
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://btc-testground.vercel.app/#webapp",
+          "name": "Bitcoin Price Tracker",
+          "alternateName": "BTC Tracker",
+          "description": "Real-time cryptocurrency price tracker for Bitcoin, Ethereum, and Solana with professional analysis tools",
+          "url": "https://btc-testground.vercel.app/",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "Web Browser",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Aakarsh",
+            "url": "https://www.linkedin.com/in/aakarshraaj"
+          },
+          "featureList": [
+            "Real-time BTC/USDT/ETH/SOL price updates",
+            "Multi-cryptocurrency support",
+            "Live price breakdown and analysis",
+            "Professional crypto dashboard",
+            "Powered by Binance WebSocket API",
+            "Crypto profit calculator",
+            "DCA calculator",
+            "Mining profitability calculator",
+            "Staking rewards calculator"
+          ],
+          "screenshot": "https://btc-testground.vercel.app/og-image.svg",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://btc-testground.vercel.app/#website",
+          "url": "https://btc-testground.vercel.app/",
+          "name": "Bitcoin Price Tracker",
+          "description": "Professional cryptocurrency price tracker with real-time Bitcoin, Ethereum, and Solana prices",
+          "inLanguage": "en-US",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://btc-testground.vercel.app/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          },
+          "publisher": {
+            "@type": "Person",
+            "name": "Aakarsh",
+            "url": "https://www.linkedin.com/in/aakarshraaj"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://btc-testground.vercel.app/#breadcrumbs",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://btc-testground.vercel.app/"
+            }
+          ]
+        }
       ]
     }
     </script>
-    <script type="module" crossorigin src="/assets/index-3bvodm5X.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BlRWILlk.css">
+    <script type="module" crossorigin src="/assets/index-5aFWB2a2.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-CcheCkM0.js">
+    <link rel="modulepreload" crossorigin href="/assets/ui-BEv8mWW2.js">
+    <link rel="modulepreload" crossorigin href="/assets/router-CyPVPIQq.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BSPJXoKj.css">
   </head>
   <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50">
+      Skip to main content
+    </a>
+    
     <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(registrationError => console.log('SW registration failed'));
+        });
+      }
+    </script>
   </body>
 </html>

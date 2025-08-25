@@ -1,0 +1,45 @@
+/*
+  # Security Headers
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  
+  # Performance Headers
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static assets with longer cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Manifest
+/site.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+# Images
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: image/svg+xml
+
+# Fonts (if any)
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff2
+
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff
+
+# API routes (if any)
+/api/*
+  Cache-Control: public, max-age=300
+  
+# HTML files
+/*.html
+  Cache-Control: public, max-age=3600
