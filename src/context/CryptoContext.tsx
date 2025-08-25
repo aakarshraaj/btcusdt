@@ -127,14 +127,14 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
       (ws as any).connectionId = connectionId;
       (ws as any).symbol = crypto;
 
-      // Set a timeout to fallback to mock data if WebSocket fails
+      // Set a longer timeout before falling back to mock data (5 minutes instead of 10 seconds)
       const fallbackTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.log(`⚠️ WebSocket connection failed for ${crypto} after 10 seconds, falling back to mock data`);
+          console.log(`⚠️ WebSocket connection failed for ${crypto} after 5 minutes, falling back to mock data`);
           ws.close();
           startMockDataConnection(crypto);
         }
-      }, 10000); // 10 second timeout - increased from 3 seconds
+      }, 300000); // 5 minute timeout - much longer to keep trying real data
 
       ws.onopen = () => {
         if ((ws as any).connectionId !== connectionId) return;
@@ -176,15 +176,19 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
         if ((ws as any).connectionId !== connectionId) return;
         clearTimeout(fallbackTimeout);
         
-        // Try to reconnect up to MAX_RETRIES times before falling back to mock data
+        // Try to reconnect up to MAX_RETRIES times, then keep retrying with longer intervals
         if (retryCountRef.current < MAX_RETRIES) {
           retryCountRef.current++;
           console.warn(`🔌 WebSocket closed for ${crypto}, attempting retry ${retryCountRef.current}/${MAX_RETRIES}`);
+          setConnectionStatus("connecting"); // Show connecting status while retrying
           setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS * retryCountRef.current);
         } else {
-          console.warn(`🔌 WebSocket closed for ${crypto} after ${MAX_RETRIES} retries, falling back to mock data`);
-          retryCountRef.current = 0; // Reset for next connection attempt
-          startMockDataConnection(crypto);
+          console.warn(`🔌 WebSocket closed for ${crypto} after ${MAX_RETRIES} quick retries, continuing with slower retries...`);
+          // Continue retrying with exponential backoff (up to 60 seconds)
+          const backoffMs = Math.min(60000, RECONNECT_BASE_MS * Math.pow(2, retryCountRef.current - MAX_RETRIES));
+          setConnectionStatus("connecting"); // Keep showing connecting status
+          setTimeout(() => connectWebSocket(crypto), backoffMs);
+          retryCountRef.current++;
         }
       };
 
@@ -196,15 +200,17 @@ export function CryptoProvider({ children }: CryptoProviderProps) {
         // Don't immediately fall back to mock data on error - let onclose handle it
       };
     } catch (error) {
-      console.error("Error creating WebSocket, falling back to mock data:", error);
-      startMockDataConnection(crypto);
+      console.error("Error creating WebSocket:", error);
+      setConnectionStatus("connecting"); // Show connecting status and let retry logic handle it
+      // Don't immediately fall back to mock data - let the retry logic handle it
+      setTimeout(() => connectWebSocket(crypto), RECONNECT_BASE_MS);
     }
   };
 
-  // Start mock data connection when WebSocket fails
+  // Start mock data connection when WebSocket fails (as last resort)
   const startMockDataConnection = (crypto: SupportedCrypto) => {
-    console.log(`🎭 Starting mock data connection for ${crypto}`);
-    setConnectionStatus("connected"); // Mock connection is always "connected"
+    console.log(`🎭 Starting mock data connection for ${crypto} (fallback mode)`);
+    setConnectionStatus("disconnected"); // Show disconnected status to indicate this is not real data
     
     // Stop any existing mock subscriptions
     mockPriceProvider.cleanup();
