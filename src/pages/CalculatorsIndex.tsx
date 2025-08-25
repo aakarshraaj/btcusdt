@@ -16,14 +16,27 @@ export function CalculatorsIndex({ onCalculatorClick, onHomeClick }: Calculators
             <div className="flex items-center gap-4">
               <button
                 onClick={onHomeClick}
-                className="text-2xl font-bold text-foreground hover:text-accent-foreground transition-colors"
+                className="text-2xl font-bold text-foreground hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded transition-colors"
+                aria-label="BTCUSDT.live - Navigate to home page"
               >
                 BTCUSDT.live
               </button>
-              <nav className="text-sm text-muted-foreground">
-                <button onClick={onHomeClick} className="hover:text-foreground">Home</button>
-                <span className="mx-2">›</span>
-                <span className="text-foreground">Calculators</span>
+              <nav className="text-sm text-muted-foreground" aria-label="Breadcrumb navigation">
+                <ol className="flex items-center">
+                  <li>
+                    <button 
+                      onClick={onHomeClick} 
+                      className="hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+                      aria-label="Navigate to home page"
+                    >
+                      Home
+                    </button>
+                  </li>
+                  <li aria-hidden="true" className="mx-2">›</li>
+                  <li>
+                    <span className="text-foreground" aria-current="page">Calculators</span>
+                  </li>
+                </ol>
               </nav>
             </div>
           </div>
@@ -42,26 +55,34 @@ export function CalculatorsIndex({ onCalculatorClick, onHomeClick }: Calculators
         </div>
         
         {/* Calculator grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6"
+          role="grid"
+          aria-label="Cryptocurrency calculators"
+        >
           {calculators.map((calculator, index) => (
             <motion.div
               key={calculator.slug}
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onCalculatorClick(calculator.slug)}
+              role="gridcell"
             >
-              <div className="text-4xl mb-4">{calculator.icon}</div>
+              <div className="text-4xl mb-4" aria-hidden="true">{calculator.icon}</div>
               <h3 className="text-xl font-bold text-foreground mb-2">
                 {calculator.title}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {calculator.description}
               </p>
-              <button className="w-full bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 transition-colors">
+              <button 
+                className="w-full bg-primary text-primary-foreground rounded-lg py-2 px-4 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
+                onClick={() => onCalculatorClick(calculator.slug)}
+                aria-label={`Open ${calculator.title} calculator`}
+              >
                 Use Calculator
               </button>
             </motion.div>
