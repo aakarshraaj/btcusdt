@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Critical Resource Hints -->
-    <link rel="preconnect" href="https://www.googletagmanager.com" />
-    <link rel="preconnect" href="https://stream.binance.com" />
-    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="preconnect" href="https://stream.binance.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//api.binance.com" />
+    <link rel="dns-prefetch" href="//www.google-analytics.com" />
+    
+    <!-- Preload critical fonts for performance -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
     
     <!-- SEO Meta Tags -->
     <title>Live Bitcoin Price (BTC/USDT) | Real-Time Crypto Tracker for BTC, ETH, SOL</title>
@@ -60,6 +67,11 @@
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Performance hints -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
     <!-- Accessibility and UX -->
     <meta name="color-scheme" content="dark light" />
@@ -153,11 +165,11 @@
       ]
     }
     </script>
-    <script type="module" crossorigin src="/assets/index-hedKAtrs.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/vendor-CcheCkM0.js">
-    <link rel="modulepreload" crossorigin href="/assets/ui-BEv8mWW2.js">
-    <link rel="modulepreload" crossorigin href="/assets/router-CyPVPIQq.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-BtYkKh8z.css">
+    <script type="module" crossorigin src="/assets/js/index-CxhwJiQ9.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-CqWfQrri.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/ui-D1k8ehLH.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/router-CVlom6JX.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-bZq6tCCm.css">
   </head>
   <body>
     <!-- Skip Link for Accessibility -->
@@ -167,15 +179,36 @@
     
     <div id="root"></div>
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration with Error Handling -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => console.log('SW registered'))
-            .catch(registrationError => console.log('SW registration failed'));
+          navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            updateViaCache: 'none'
+          })
+            .then(registration => {
+              console.log('Service Worker registered successfully:', registration.scope);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New content is available, show update notification
+                      console.log('New content available, please refresh');
+                    }
+                  });
+                }
+              });
+            })
+            .catch(registrationError => {
+              console.warn('Service Worker registration failed:', registrationError);
+            });
         });
       }
+    </script>
     </script>
   </body>
 </html>
