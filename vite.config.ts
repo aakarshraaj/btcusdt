@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
+    // Explicitly set output directory for Vercel deployment
+    outDir: 'dist',
     // Enable code splitting
     rollupOptions: {
       output: {
