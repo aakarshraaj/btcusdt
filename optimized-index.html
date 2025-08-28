@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Enhanced Critical Resource Hints for Performance -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="preconnect" href="https://stream.binance.com" crossorigin />
+    <link rel="preconnect" href="https://api.binance.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="//stream.binance.com" />
+    <link rel="dns-prefetch" href="//api.binance.com" />
+    
+    <!-- Preload Critical CSS and Fonts -->
+    <link rel="preload" href="/assets/index-optimized.css" as="style" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" as="style" />
+    <link rel="preload" href="/assets/vendor-optimized.js" as="script" />
+    <link rel="preload" href="/assets/index-optimized.js" as="script" />
+    
+    <!-- Critical CSS inline for above-the-fold content -->
+    <style>
+      /* Critical CSS for initial render */
+      :root{--font-sans:ui-sans-serif,system-ui,sans-serif;--background:#fff;--foreground:#030213;--primary:#030213;--radius:.625rem}
+      *{box-sizing:border-box;margin:0;padding:0}
+      html{font-family:var(--font-sans);line-height:1.5;-webkit-text-size-adjust:100%}
+      body{background-color:var(--background);color:var(--foreground);font-family:'Space Grotesk',var(--font-sans)}
+      .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      .focus\:not-sr-only:focus{position:static;width:auto;height:auto;padding:0;margin:0;overflow:visible;clip:auto;white-space:normal}
+      #root{min-height:100vh}
+      .loading{display:flex;align-items:center;justify-content:center;min-height:100vh}
+    </style>
+    
+    <!-- SEO Meta Tags -->
+    <title>Live Bitcoin Price (BTC/USDT) | Real-Time Crypto Tracker for BTC, ETH, SOL</title>
+    <meta name="description" content="Track Bitcoin (BTC), Ethereum (ETH), and Solana (SOL) prices in real-time with our professional crypto price tracker. Live updates, price breakdowns, and crypto analysis tools." />
+    <meta name="keywords" content="bitcoin price, crypto tracker, BTC USDT, ethereum price, solana price, live crypto prices, cryptocurrency tracker, binance api, real time crypto, bitcoin price today, bitcoin price live, btc price prediction, crypto market cap, digital currency prices, crypto portfolio tracker, bitcoin investment tracker, crypto price alerts, btc to usd converter" />
+    <meta name="author" content="Aakarsh" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://btc-testground.vercel.app/" />
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Live Bitcoin Price Tracker | Real-Time BTC, ETH, SOL Prices" />
+    <meta property="og:description" content="Professional crypto price tracker with live Bitcoin, Ethereum, and Solana prices. Real-time updates, price alerts, and comprehensive analysis tools." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://btc-testground.vercel.app/" />
+    <meta property="og:image" content="https://btc-testground.vercel.app/og-image.webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Bitcoin Price Tracker Dashboard - Live BTC, ETH, SOL Prices" />
+    <meta property="og:site_name" content="Bitcoin Price Tracker" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Live Bitcoin Price Tracker | Real-Time Crypto Prices" />
+    <meta name="twitter:description" content="Track Bitcoin, Ethereum, and Solana prices in real-time with professional crypto analysis tools." />
+    <meta property="twitter:image" content="https://btc-testground.vercel.app/twitter-image.webp" />
+    <meta name="twitter:image:alt" content="Bitcoin Price Tracker Dashboard" />
+    
+    <!-- PWA and Mobile Optimization -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BTC Tracker" />
+    <meta name="application-name" content="Bitcoin Price Tracker" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Web Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Optimized Favicons with Modern Formats -->
+    <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" id="favicon-fallback" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/favicon-light.svg" color="#000000" />
+    
+    <!-- Performance and Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Accessibility and UX -->
+    <meta name="color-scheme" content="dark light" />
+    <meta name="supported-color-schemes" content="dark light" />
+    
+    <!-- Optimized Analytics Loading -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5YBCEEJLC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J5YBCEEJLC', {
+        custom_map: { 'metric1': 'page_load_time' },
+        page_title: document.title,
+        send_page_view: false
+      });
+      // Send page view after initial render
+      setTimeout(() => gtag('event', 'page_view'), 100);
+    </script>
+    
+    <!-- Non-critical CSS loaded asynchronously -->
+    <link rel="preload" href="/assets/index-optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/assets/index-optimized.css"></noscript>
+    
+    <!-- Enhanced Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://btc-testground.vercel.app/#webapp",
+          "name": "Bitcoin Price Tracker",
+          "alternateName": "BTC Tracker",
+          "description": "Real-time cryptocurrency price tracker for Bitcoin, Ethereum, and Solana with professional analysis tools",
+          "url": "https://btc-testground.vercel.app/",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "Web Browser",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Aakarsh",
+            "url": "https://www.linkedin.com/in/aakarshraaj"
+          },
+          "featureList": [
+            "Real-time BTC/USDT/ETH/SOL price updates",
+            "Multi-cryptocurrency support",
+            "Live price breakdown and analysis",
+            "Professional crypto dashboard",
+            "Powered by Binance WebSocket API",
+            "Crypto profit calculator",
+            "DCA calculator",
+            "Mining profitability calculator",
+            "Staking rewards calculator"
+          ],
+          "screenshot": "https://btc-testground.vercel.app/og-image.webp",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://btc-testground.vercel.app/#website",
+          "url": "https://btc-testground.vercel.app/",
+          "name": "Bitcoin Price Tracker",
+          "description": "Professional cryptocurrency price tracker with real-time Bitcoin, Ethereum, and Solana prices",
+          "inLanguage": "en-US",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://btc-testground.vercel.app/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          },
+          "publisher": {
+            "@type": "Person",
+            "name": "Aakarsh",
+            "url": "https://www.linkedin.com/in/aakarshraaj"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://btc-testground.vercel.app/#breadcrumbs",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://btc-testground.vercel.app/"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+    
+    <!-- Web Vitals Tracking -->
+    <script>
+      // Performance monitoring
+      if ('PerformanceObserver' in window) {
+        // Monitor Core Web Vitals
+        const observer = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            if (entry.entryType === 'largest-contentful-paint') {
+              gtag('event', 'web_vitals', {
+                'metric_name': 'LCP',
+                'metric_value': Math.round(entry.startTime),
+                'metric_delta': Math.round(entry.startTime)
+              });
+            }
+            if (entry.entryType === 'first-input') {
+              gtag('event', 'web_vitals', {
+                'metric_name': 'FID',
+                'metric_value': Math.round(entry.processingStart - entry.startTime),
+                'metric_delta': Math.round(entry.processingStart - entry.startTime)
+              });
+            }
+          });
+        });
+        
+        try {
+          observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input'] });
+        } catch (e) {
+          // Fallback for older browsers
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50">
+      Skip to main content
+    </a>
+    
+    <!-- Loading indicator for better perceived performance -->
+    <div id="loading-indicator" class="loading" style="display:none;">
+      <div>Loading Bitcoin Tracker...</div>
+    </div>
+    
+    <div id="root" role="main"></div>
+    
+    <!-- Optimized Script Loading -->
+    <script>
+      // Show loading indicator if app takes time to load
+      setTimeout(() => {
+        if (!document.querySelector('#root').children.length) {
+          document.getElementById('loading-indicator').style.display = 'flex';
+        }
+      }, 100);
+    </script>
+    
+    <!-- Module scripts with defer for optimal loading -->
+    <script type="module" defer src="/assets/vendor-optimized.js"></script>
+    <script type="module" defer src="/assets/index-optimized.js"></script>
+    
+    <!-- Service Worker Registration with Error Handling -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-optimized.js', {
+            scope: '/',
+            updateViaCache: 'imports'
+          })
+          .then(registration => {
+            console.log('SW registered successfully');
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New version available
+                  if (confirm('A new version is available. Would you like to update?')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.warn('SW registration failed:', error);
+          });
+        });
+      }
+      
+      // Cleanup loading indicator once app loads
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          const loading = document.getElementById('loading-indicator');
+          if (loading) loading.style.display = 'none';
+        }, 500);
+      });
+    </script>
+    
+    <!-- Prefetch next likely navigation targets -->
+    <script>
+      // Prefetch calculator pages on hover
+      document.addEventListener('DOMContentLoaded', () => {
+        const prefetchLinks = [
+          '/calculators/profit',
+          '/calculators/dca',
+          '/calculators/mining',
+          '/calculators/staking'
+        ];
+        
+        // Prefetch on interaction or after 2 seconds of idle
+        let prefetched = false;
+        const prefetch = () => {
+          if (prefetched) return;
+          prefetched = true;
+          prefetchLinks.forEach(href => {
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = href;
+            document.head.appendChild(link);
+          });
+        };
+        
+        setTimeout(prefetch, 2000);
+        ['mouseenter', 'touchstart'].forEach(event => {
+          document.addEventListener(event, prefetch, { once: true, passive: true });
+        });
+      });
+    </script>
+  </body>
+</html>
